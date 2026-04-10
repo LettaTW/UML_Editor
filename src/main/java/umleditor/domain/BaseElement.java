@@ -1,31 +1,28 @@
-package umleditor.domain.node;
-import umleditor.domain.DiagramElement;
-import java.awt.*;
+package umleditor.domain;
+
+import umleditor.config.EditorDefaults;
+
 import java.util.UUID;
 
-public abstract class BaseNodeElement implements DiagramElement {
+public abstract class BaseElement implements DiagramElement {
     protected final String uuid;
-    protected int z; // z-axis coordinates
+    protected int Depth = EditorDefaults.DEFAULT_DEPTH;
     protected boolean selected;
     protected boolean hovered;
 
-    protected BaseNodeElement() {
+    protected BaseElement() {
         this.uuid = UUID.randomUUID().toString();
     }
 
     @Override
-    public String getID() {
-        return this.uuid;
-    }
+    public String getID() { return this.uuid; }
 
     @Override
-    public int getZ() {
-        return this.z;
-    }
+    public int getDepth() { return this.Depth; }
 
     @Override
-    public void setZ(int z) {
-        this.z = z;
+    public void setDepth(int depth) {
+        this.Depth = depth;
     }
 
     @Override
