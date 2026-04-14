@@ -2,18 +2,21 @@ package umleditor.domain.node;
 
 import umleditor.domain.BaseElement;
 import umleditor.domain.model.Port;
+import umleditor.rendering.Renderable;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Collections;
 
-public abstract class Node extends BaseElement {
+public abstract class Node extends BaseElement implements Renderable {
     // Define the Node's Bounds
     protected int x;
     protected int y;
     protected int width;
     protected int height;
 
-    protected ArrayList<Port> ports = new ArrayList<Port>();
+    protected final List<Port> ports = new ArrayList<>();
     protected Node(int x, int y, int width, int height) {
         this.x = x;
         this.y = y;
@@ -29,10 +32,37 @@ public abstract class Node extends BaseElement {
         updatePorts();
     }
 
+    public void setBounds(int x, int y, int width, int height) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        updatePorts();
+    }
+
     /**
      * Gets the bounding {@code Rectangle} of this {@code Node}.
      * @return a new {@code Rectangle}, equal the {@code Node}'s selected range (x, y, width, height)
      */
+
+    @Override
+    public Rectangle getBounds() {
+        return new Rectangle(x, y, width, height);
+    }
+
+    public List<Port> getPorts() {
+        return Collections.unmodifiableList(ports);
+    }
+
+    public Port findPortAt(Point p) {
+        for (Port port : ports) {
+            if (port.contains(p)) {
+                return port;
+            }
+        }
+        return null;
+    }
+
 
     public Point getOppositeAnchor(Port port) {
         int oppositeX = (2 * this.x + this.width) - port.getX();
@@ -61,8 +91,7 @@ public abstract class Node extends BaseElement {
     public int getWidth() { return width; }
     public int getHeight() { return height; }
 
-    @Override
-    public Rectangle getBounds() { return new Rectangle(x, y, width, height); }
+    public abstract void draw(Graphics2D g2);
 
     public abstract void updatePorts();
 
