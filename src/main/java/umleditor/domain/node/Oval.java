@@ -4,9 +4,14 @@ import umleditor.domain.model.Port;
 
 import java.awt.*;
 
+import static umleditor.config.EditorDefaults.DEFAULT_OVAL_FILL_COLOR;
+import static umleditor.config.EditorDefaults.DEFAULT_OVAL_LABEL_TEXT;
+
 public class Oval extends Node {
     public Oval(int x, int y, int width, int height) {
         super(x, y, width, height);
+        setFillColor(DEFAULT_OVAL_FILL_COLOR);
+        setLabelText(DEFAULT_OVAL_LABEL_TEXT);
     }
 
     @Override
@@ -27,10 +32,12 @@ public class Oval extends Node {
     @Override
     public void draw(Graphics2D g2) {
         Rectangle r = getBounds();
-        g2.setColor(Color.WHITE);
+        g2.setColor(getFillColor());
         g2.fillOval(r.x, r.y, r.width, r.height);
         g2.setColor(Color.BLACK);
         g2.drawOval(r.x, r.y, r.width, r.height);
+        drawCenteredLabel(g2, r);
+        drawPortsIfNeeded(g2);
     }
 
     @Override

@@ -1,10 +1,10 @@
 package umleditor.application.tools;
 
-import umleditor.application.service.DiagramModel;
+import umleditor.domain.DiagramDocument;
 import umleditor.enumtype.ToolMode;
 
 public class CreateRectTool extends DragCreateNodeTool {
-    public CreateRectTool(DiagramModel model) {
+    public CreateRectTool(DiagramDocument model) {
         super(model, ToolMode.CREATE_RECT);
     }
 }

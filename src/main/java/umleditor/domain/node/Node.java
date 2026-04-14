@@ -1,5 +1,6 @@
 package umleditor.domain.node;
 
+import umleditor.config.EditorDefaults;
 import umleditor.domain.BaseElement;
 import umleditor.domain.model.Port;
 import umleditor.rendering.Renderable;
@@ -15,6 +16,8 @@ public abstract class Node extends BaseElement implements Renderable {
     protected int y;
     protected int width;
     protected int height;
+    private Color fillColor = Color.WHITE;
+    private String labelText = EditorDefaults.DEFAULT_LABEL_TEXT;
 
     protected final List<Port> ports = new ArrayList<>();
     protected Node(int x, int y, int width, int height) {
@@ -44,7 +47,6 @@ public abstract class Node extends BaseElement implements Renderable {
      * Gets the bounding {@code Rectangle} of this {@code Node}.
      * @return a new {@code Rectangle}, equal the {@code Node}'s selected range (x, y, width, height)
      */
-
     @Override
     public Rectangle getBounds() {
         return new Rectangle(x, y, width, height);
@@ -90,6 +92,47 @@ public abstract class Node extends BaseElement implements Renderable {
     public int getY() { return y; }
     public int getWidth() { return width; }
     public int getHeight() { return height; }
+
+    protected Color getFillColor() { return fillColor; }
+
+    protected void setFillColor(Color fillColor) {
+        this.fillColor = fillColor;
+    }
+
+    protected String getLabelText() { return labelText; }
+
+    protected void setLabelText(String labelText) {
+        this.labelText = labelText;
+    }
+
+    protected void drawCenteredLabel(Graphics2D g2, Rectangle bounds) {
+        if (labelText == null || labelText.isEmpty()) {
+            return;
+        }
+
+        Font oldFont = g2.getFont();
+        g2.setFont(oldFont.deriveFont((float) EditorDefaults.DEFAULT_LABEL_FONT_SIZE));
+        FontMetrics fm = g2.getFontMetrics();
+
+        int textX = bounds.x + (bounds.width - fm.stringWidth(labelText)) / 2;
+        int textY = bounds.y + (bounds.height + fm.getAscent() - fm.getDescent()) / 2;
+
+        g2.setColor(Color.BLACK);
+        g2.drawString(labelText, textX, textY);
+        g2.setFont(oldFont);
+    }
+
+    protected void drawPortsIfNeeded(Graphics2D g2) {
+        if (!isSelected() && !isHovered()) {
+            return;
+        }
+
+        g2.setColor(Color.BLACK);
+        for (Port port : ports) {
+            Rectangle b = port.getBounds();
+            g2.fillRect(b.x, b.y, b.width, b.height);
+        }
+    }
 
     public abstract void draw(Graphics2D g2);
 

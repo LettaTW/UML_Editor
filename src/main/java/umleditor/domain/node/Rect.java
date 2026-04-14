@@ -4,9 +4,14 @@ import umleditor.domain.model.Port;
 
 import java.awt.*;
 
+import static umleditor.config.EditorDefaults.DEFAULT_RECT_FILL_COLOR;
+import static umleditor.config.EditorDefaults.DEFAULT_RECT_LABEL_TEXT;
+
 public class Rect extends Node {
     public Rect(int x, int y, int width, int height) {
         super(x, y, width, height);
+        setFillColor(DEFAULT_RECT_FILL_COLOR);
+        setLabelText(DEFAULT_RECT_LABEL_TEXT);
     }
 
     @Override
@@ -17,10 +22,12 @@ public class Rect extends Node {
     @Override
     public void draw(Graphics2D g2) {
         Rectangle r = getBounds();
-        g2.setColor(Color.WHITE);
+        g2.setColor(getFillColor());
         g2.fillRect(r.x, r.y, r.width, r.height);
         g2.setColor(Color.BLACK);
         g2.drawRect(r.x, r.y, r.width, r.height);
+        drawCenteredLabel(g2, r);
+        drawPortsIfNeeded(g2);
     }
 
     @Override

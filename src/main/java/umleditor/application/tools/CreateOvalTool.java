@@ -1,10 +1,10 @@
 package umleditor.application.tools;
 
-import umleditor.application.service.DiagramModel;
+import umleditor.domain.DiagramDocument;
 import umleditor.enumtype.ToolMode;
 
 public class CreateOvalTool extends DragCreateNodeTool {
-    public CreateOvalTool(DiagramModel model) {
+    public CreateOvalTool(DiagramDocument model) {
         super(model, ToolMode.CREATE_OVAL);
     }
 }

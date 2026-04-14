@@ -1,21 +1,21 @@
 package umleditor.application.tools;
 
-import umleditor.application.service.DiagramModel;
+import umleditor.domain.DiagramDocument;
 import umleditor.domain.node.Node;
 import umleditor.enumtype.ToolMode;
 
 import java.awt.*;
 
-import static umleditor.config.EditorDefaults.MIN_NODE_SIZE;
+import static umleditor.config.EditorDefaults.DEFAULT_NODE_HEIGHT;
+import static umleditor.config.EditorDefaults.DEFAULT_NODE_WIDTH;
 
 public abstract class DragCreateNodeTool implements Tool {
-    private final DiagramModel model;
+    private final DiagramDocument model;
     private final ToolMode mode;
 
     private Point dragStart;
-    private Point dragCurrent;
 
-    protected DragCreateNodeTool(DiagramModel model, ToolMode mode) {
+    protected DragCreateNodeTool(DiagramDocument model, ToolMode mode) {
         this.model = model;
         this.mode = mode;
     }
@@ -23,15 +23,11 @@ public abstract class DragCreateNodeTool implements Tool {
     @Override
     public void mousePressed(Point p) {
         dragStart = p;
-        dragCurrent = p;
     }
 
     @Override
     public void mouseDragged(Point p) {
-        if (dragStart == null) {
-            return;
-        }
-        dragCurrent = p;
+        // Default-size creation does not depend on drag distance.
     }
 
     @Override
@@ -40,37 +36,24 @@ public abstract class DragCreateNodeTool implements Tool {
             return false;
         }
 
-        Rectangle bounds = buildBounds(dragStart, p);
+        // Center the new node at the release point by adjusting the top-left corner position
+        int left = p.x - (DEFAULT_NODE_WIDTH / 2);
+        int top = p.y - (DEFAULT_NODE_HEIGHT / 2);
+        Rectangle bounds = new Rectangle(left, top, DEFAULT_NODE_WIDTH, DEFAULT_NODE_HEIGHT);
         Node createdNode = mode.createNode(bounds);
-        if (createdNode != null) {
-            model.addElement(createdNode);
+        dragStart = null;
+
+        if (createdNode == null) {
+            return false;
         }
 
-        dragStart = null;
-        dragCurrent = null;
+        model.addElement(createdNode);
         return true;
     }
 
     @Override
     public void drawOverlay(Graphics2D g2) {
-        if (dragStart == null || dragCurrent == null) {
-            return;
-        }
-
-        Rectangle preview = buildBounds(dragStart, dragCurrent);
-        Stroke oldStroke = g2.getStroke();
-        g2.setStroke(new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{5f, 4f}, 0));
-        g2.setColor(Color.DARK_GRAY);
-        mode.drawPreview(g2, preview);
-        g2.setStroke(oldStroke);
-    }
-
-    private Rectangle buildBounds(Point start, Point end) {
-        int x = Math.min(start.x, end.x);
-        int y = Math.min(start.y, end.y);
-        int width = Math.max(MIN_NODE_SIZE, Math.abs(end.x - start.x));
-        int height = Math.max(MIN_NODE_SIZE, Math.abs(end.y - start.y));
-        return new Rectangle(x, y, width, height);
+        // Default-size creation does not render drag-size preview.
     }
 }
 
