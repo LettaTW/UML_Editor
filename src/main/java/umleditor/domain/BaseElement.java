@@ -22,7 +22,7 @@ public abstract class BaseElement implements DiagramElement {
 
     @Override
     public void setDepth(int depth) {
-        this.Depth = depth;
+        this.Depth = EditorDefaults.clampDepth(depth);
     }
 
     @Override
