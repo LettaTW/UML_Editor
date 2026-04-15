@@ -14,6 +14,9 @@ import static umleditor.config.EditorDefaults.TOOLBAR_BUTTON_HEIGHT;
 import static umleditor.config.EditorDefaults.TOOLBAR_BUTTON_WIDTH;
 
 public class App {
+    private record EditMenuActions(JMenuBar menuBar, JMenuItem group, JMenuItem ungroup, JMenuItem label) {
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(App::start);
     }
@@ -35,10 +38,6 @@ public class App {
         JButton rectButton = new JButton("Rect");
         JButton ovalButton = new JButton("Oval");
 
-        associationButton.setEnabled(false);
-        generalizationButton.setEnabled(false);
-        compositionButton.setEnabled(false);
-
         addToolRow(toolbar, 0, selectButton);
         addToolRow(toolbar, 1, associationButton);
         addToolRow(toolbar, 2, generalizationButton);
@@ -48,29 +47,106 @@ public class App {
 
         EditorCanvas canvas = new EditorCanvas(controller, () -> {});
 
+        EditMenuActions editMenuActions = createEditMenu(controller, canvas, frame);
+        frame.setJMenuBar(editMenuActions.menuBar());
+
         Runnable refreshToolbar = () -> {
             applyModeStyle(selectButton, controller.getCurrentToolMode() == ToolMode.SELECT);
+            applyModeStyle(associationButton, controller.getCurrentToolMode() == ToolMode.LINK_ASSOCIATION);
+            applyModeStyle(generalizationButton, controller.getCurrentToolMode() == ToolMode.LINK_GENERALIZATION);
+            applyModeStyle(compositionButton, controller.getCurrentToolMode() == ToolMode.LINK_COMPOSITION);
             applyModeStyle(rectButton, controller.getCurrentToolMode() == ToolMode.CREATE_RECT);
             applyModeStyle(ovalButton, controller.getCurrentToolMode() == ToolMode.CREATE_OVAL);
         };
 
-        canvas.setModeChangedCallback(refreshToolbar);
+        Runnable refreshUiState = () -> {
+            refreshToolbar.run();
+            refreshEditMenuState(controller, editMenuActions);
+        };
+
+        canvas.setInteractionChangedCallback(refreshUiState);
 
         selectButton.addActionListener(e -> {
             controller.setCurrentTool(ToolMode.SELECT);
-            refreshToolbar.run();
+            refreshUiState.run();
         });
 
-        attachCreateDragFromButton(rectButton, ToolMode.CREATE_RECT, controller, canvas, refreshToolbar);
-        attachCreateDragFromButton(ovalButton, ToolMode.CREATE_OVAL, controller, canvas, refreshToolbar);
+        associationButton.addActionListener(e -> {
+            controller.setCurrentTool(ToolMode.LINK_ASSOCIATION);
+            refreshUiState.run();
+        });
+
+        generalizationButton.addActionListener(e -> {
+            controller.setCurrentTool(ToolMode.LINK_GENERALIZATION);
+            refreshUiState.run();
+        });
+
+        compositionButton.addActionListener(e -> {
+            controller.setCurrentTool(ToolMode.LINK_COMPOSITION);
+            refreshUiState.run();
+        });
+
+        attachCreateDragFromButton(rectButton, ToolMode.CREATE_RECT, controller, canvas, refreshUiState);
+        attachCreateDragFromButton(ovalButton, ToolMode.CREATE_OVAL, controller, canvas, refreshUiState);
 
         frame.setLayout(new BorderLayout());
         frame.add(toolbar, BorderLayout.WEST);
         frame.add(canvas, BorderLayout.CENTER);
 
-        refreshToolbar.run();
+        refreshUiState.run();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+    }
+
+    private static EditMenuActions createEditMenu(EditorController controller, EditorCanvas canvas, JFrame frame) {
+        JMenuItem groupMenuItem = new JMenuItem("Group");
+        JMenuItem ungroupMenuItem = new JMenuItem("Ungroup");
+        JMenuItem labelMenuItem = new JMenuItem("Label");
+
+        groupMenuItem.addActionListener(e -> {
+            if (controller.groupSelected()) {
+                canvas.repaint();
+            }
+            refreshEditMenuState(controller, groupMenuItem, ungroupMenuItem, labelMenuItem);
+        });
+
+        ungroupMenuItem.addActionListener(e -> {
+            if (controller.ungroupSelected()) {
+                canvas.repaint();
+            }
+            refreshEditMenuState(controller, groupMenuItem, ungroupMenuItem, labelMenuItem);
+        });
+
+        labelMenuItem.addActionListener(e -> {
+            openLabelDialog(frame, controller, canvas);
+            refreshEditMenuState(controller, groupMenuItem, ungroupMenuItem, labelMenuItem);
+        });
+
+        JMenu editMenu = new JMenu("Edit");
+        editMenu.add(groupMenuItem);
+        editMenu.add(ungroupMenuItem);
+        editMenu.addSeparator();
+        editMenu.add(labelMenuItem);
+
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.add(editMenu);
+        return new EditMenuActions(menuBar, groupMenuItem, ungroupMenuItem, labelMenuItem);
+    }
+
+    private static void refreshEditMenuState(EditorController controller, EditMenuActions editMenuActions) {
+        refreshEditMenuState(controller, editMenuActions.group(), editMenuActions.ungroup(), editMenuActions.label());
+    }
+
+    private static void refreshEditMenuState(
+            EditorController controller,
+            JMenuItem groupMenuItem,
+            JMenuItem ungroupMenuItem,
+            JMenuItem labelMenuItem
+    ) {
+        boolean inSelectMode = controller.getCurrentToolMode() == ToolMode.SELECT;
+        groupMenuItem.setEnabled(inSelectMode && controller.canGroupSelected());
+        ungroupMenuItem.setEnabled(inSelectMode && controller.canUngroupSelected());
+        labelMenuItem.setEnabled(inSelectMode && controller.canEditLabelSelection());
     }
 
     private static void applyModeStyle(JButton button, boolean active) {
@@ -103,14 +179,14 @@ public class App {
             ToolMode mode,
             EditorController controller,
             EditorCanvas canvas,
-            Runnable refreshToolbar
+            Runnable refreshUiState
     ) {
         button.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (SwingUtilities.isLeftMouseButton(e)) {
                     controller.setTemporaryTool(mode);
-                    refreshToolbar.run();
+                    refreshUiState.run();
                 }
             }
 
@@ -127,8 +203,43 @@ public class App {
                 }
 
                 controller.restorePreviousTool();
-                refreshToolbar.run();
+                refreshUiState.run();
             }
         });
+    }
+
+    private static void openLabelDialog(JFrame frame, EditorController controller, EditorCanvas canvas) {
+        EditorController.LabelEditState current = controller.getSelectedBasicNodeLabelState();
+        if (current == null) {
+            return;
+        }
+
+        JTextField nameField = new JTextField(current.text(), 24);
+        JColorChooser colorChooser = new JColorChooser(current.fillColor());
+
+        JPanel panel = new JPanel(new BorderLayout(0, 8));
+        JPanel namePanel = new JPanel(new BorderLayout(8, 0));
+        namePanel.add(new JLabel("Label Name:"), BorderLayout.WEST);
+        namePanel.add(nameField, BorderLayout.CENTER);
+        panel.add(namePanel, BorderLayout.NORTH);
+        panel.add(colorChooser, BorderLayout.CENTER);
+
+        int option = JOptionPane.showConfirmDialog(
+                frame,
+                panel,
+                "Customize Label",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+        );
+        if (option != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        String nextText = nameField.getText();
+        Color nextColor = colorChooser.getColor();
+
+        if (controller.updateSelectedBasicNodeLabel(nextText, nextColor)) {
+            canvas.repaint();
+        }
     }
 }

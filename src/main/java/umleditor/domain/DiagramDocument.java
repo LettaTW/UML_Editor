@@ -17,6 +17,10 @@ public class DiagramDocument {
         bringToFront(element);
     }
 
+    public boolean removeElement(DiagramElement element) {
+        return elements.remove(element);
+    }
+
     public List<DiagramElement> getElements() {
         return Collections.unmodifiableList(elements);
     }
@@ -60,6 +64,7 @@ public class DiagramDocument {
 
         return topElement;
     }
+
 }
 
 

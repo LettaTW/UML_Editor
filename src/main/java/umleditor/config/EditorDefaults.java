@@ -36,6 +36,7 @@ public final class EditorDefaults {
     public static final int TOOLBAR_BUTTON_WIDTH = getInt("toolbar.buttonWidth", 84);
     public static final int TOOLBAR_BUTTON_HEIGHT = getInt("toolbar.buttonHeight", 44);
     public static final int TOOLBAR_BUTTON_FONT_SIZE = getInt("toolbar.buttonFontSize", 13);
+    public static final int LINK_PORT_REVEAL_PROXIMITY_PX = getInt("link.portRevealProximityPx", 16);
 
     public static final Color DEFAULT_SELECTION_BOX_STROKE_COLOR =
             getColor("selection.boxStrokeColor", new Color(50, 90, 180));
