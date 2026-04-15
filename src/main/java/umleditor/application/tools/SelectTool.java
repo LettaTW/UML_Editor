@@ -2,37 +2,82 @@ package umleditor.application.tools;
 
 import umleditor.domain.DiagramElement;
 import umleditor.domain.DiagramDocument;
-import umleditor.domain.node.Node;
+import umleditor.application.service.PointerTargetingService;
+import umleditor.application.service.ResizeGestureService;
+import umleditor.application.service.ElementTransformService;
+import umleditor.domain.link.Link;
+import umleditor.domain.model.Port;
 
 import java.awt.*;
 import java.util.List;
 
 import static umleditor.config.EditorDefaults.DEFAULT_SELECTION_BOX_FILL_COLOR;
 import static umleditor.config.EditorDefaults.DEFAULT_SELECTION_BOX_STROKE_COLOR;
+import static umleditor.config.EditorDefaults.MIN_NODE_SIZE;
 
 public class SelectTool implements Tool {
     private final DiagramDocument model;
+    private final PointerTargetingService pointerTargetingService;
+    private final ResizeGestureService resizeGestureService;
+    private final ElementTransformService elementTransformService;
     private Point dragStart;
     private Point dragCurrent;
+    private Point lastDragPoint;
+    private ResizeGestureService.ResizeSession resizeSession;
+    private DiagramElement movingElement;
+    private DiagramElement resizingElement;
     private boolean marqueeActive;
     private boolean marqueeClearedSelection;
 
-    public SelectTool(DiagramDocument model) {
+    public SelectTool(
+            DiagramDocument model,
+            PointerTargetingService pointerTargetingService,
+            ResizeGestureService resizeGestureService,
+            ElementTransformService elementTransformService
+    ) {
         this.model = model;
+        this.pointerTargetingService = pointerTargetingService;
+        this.resizeGestureService = resizeGestureService;
+        this.elementTransformService = elementTransformService;
     }
 
     @Override
     public void mousePressed(Point p) {
         dragStart = p;
         dragCurrent = p;
+        movingElement = null;
+        resizingElement = null;
+        lastDragPoint = null;
+        resizeSession = null;
 
-        DiagramElement hit = model.findTopElementAt(p);
+        PointerTargetingService.PortHit portHit = pointerTargetingService.findTopPortHitAt(p);
+        if (portHit != null) {
+            DiagramElement owner = portHit.owner();
+            Port pressedPort = portHit.port();
+            selectSingle(owner);
+
+            if (!owner.getPorts().isEmpty()) {
+                resizingElement = owner;
+                resizeSession = resizeGestureService.beginSession(owner, pressedPort);
+            }
+
+            marqueeActive = false;
+            marqueeClearedSelection = false;
+            return;
+        }
+
+        DiagramElement hit = pointerTargetingService.findTopElementAt(p);
         if (hit != null) {
             marqueeActive = false;
             marqueeClearedSelection = false;
             selectSingle(hit);
+            if (!(hit instanceof Link)) {
+                movingElement = hit;
+                lastDragPoint = p;
+            }
             return;
         }
+
         clearSelection();
         marqueeActive = true;
         marqueeClearedSelection = false;
@@ -40,6 +85,25 @@ public class SelectTool implements Tool {
 
     @Override
     public void mouseDragged(Point p) {
+        if (resizingElement != null && resizeSession != null) {
+            Rectangle resizedBounds = resizeGestureService.computeResizedBounds(
+                    resizingElement,
+                    resizeSession,
+                    p,
+                    MIN_NODE_SIZE
+            );
+            elementTransformService.applyResize(resizingElement, resizedBounds);
+            return;
+        }
+
+        if (movingElement != null && lastDragPoint != null) {
+            int dx = p.x - lastDragPoint.x;
+            int dy = p.y - lastDragPoint.y;
+            elementTransformService.applyMove(movingElement, dx, dy);
+            lastDragPoint = p;
+            return;
+        }
+
         if (!marqueeActive || dragStart == null) {
             return;
         }
@@ -57,14 +121,30 @@ public class SelectTool implements Tool {
             return;
         }
 
-        DiagramElement hoverTarget = model.findTopElementAt(p);
-        for (DiagramElement element : model.getElements()) {
-            element.setHovered(element == hoverTarget);
-        }
+        pointerTargetingService.applyHoverAt(p);
     }
 
     @Override
     public boolean mouseReleased(Point p) {
+        if (resizingElement != null) {
+            resizingElement = null;
+            resizeSession = null;
+            movingElement = null;
+            lastDragPoint = null;
+            dragStart = null;
+            dragCurrent = null;
+            return false;
+        }
+
+        if (movingElement != null) {
+            movingElement = null;
+            lastDragPoint = null;
+            resizeSession = null;
+            dragStart = null;
+            dragCurrent = null;
+            return false;
+        }
+
         if (!marqueeActive || dragStart == null) {
             dragStart = null;
             dragCurrent = null;
@@ -79,6 +159,10 @@ public class SelectTool implements Tool {
 
         marqueeActive = false;
         marqueeClearedSelection = false;
+        movingElement = null;
+        resizingElement = null;
+        lastDragPoint = null;
+        resizeSession = null;
         dragStart = null;
         dragCurrent = null;
         return false;
@@ -116,7 +200,7 @@ public class SelectTool implements Tool {
         List<DiagramElement> elements = model.getElements();
 
         for (DiagramElement element : elements) {
-            boolean selected = element instanceof Node && box.contains(element.getBounds());
+            boolean selected = !(element instanceof Link) && box.contains(element.getBounds());
             element.setSelected(selected);
             if (selected) {
                 anySelected = true;

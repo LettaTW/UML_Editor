@@ -3,14 +3,13 @@ package umleditor.domain.node;
 import umleditor.config.EditorDefaults;
 import umleditor.domain.BaseElement;
 import umleditor.domain.model.Port;
-import umleditor.rendering.Renderable;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
 
-public abstract class Node extends BaseElement implements Renderable {
+public abstract class Node extends BaseElement {
     // Define the Node's Bounds
     protected int x;
     protected int y;
@@ -66,42 +65,20 @@ public abstract class Node extends BaseElement implements Renderable {
     }
 
 
-    public Point getOppositeAnchor(Port port) {
-        int oppositeX = (2 * this.x + this.width) - port.getX();
-        int oppositeY = (2 * this.y + this.height) - port.getY();
-
-        return new Point(oppositeX, oppositeY);
-    }
-
-    public void resizeByCorner(Point anchor, Point current, int minNodeSize) {
-        int newWidth = Math.max(minNodeSize, Math.abs(current.x - anchor.x));
-        int newHeight = Math.max(minNodeSize, Math.abs(current.y - anchor.y));
-
-        int newX = (current.x < anchor.x)? (anchor.x - newWidth) : anchor.x;
-        int newY = (current.y < anchor.y)? (anchor.y - newHeight) : anchor.y;
-
-        this.x = newX;
-        this.y = newY;
-        this.width = newWidth;
-        this.height = newHeight;
-
-        updatePorts();
-    }
-
     public int getX() { return x; }
     public int getY() { return y; }
     public int getWidth() { return width; }
     public int getHeight() { return height; }
 
-    protected Color getFillColor() { return fillColor; }
+    public Color getFillColor() { return fillColor; }
 
-    protected void setFillColor(Color fillColor) {
+    public void setFillColor(Color fillColor) {
         this.fillColor = fillColor;
     }
 
-    protected String getLabelText() { return labelText; }
+    public String getLabelText() { return labelText; }
 
-    protected void setLabelText(String labelText) {
+    public void setLabelText(String labelText) {
         this.labelText = labelText;
     }
 
