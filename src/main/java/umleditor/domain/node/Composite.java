@@ -1,6 +1,5 @@
 package umleditor.domain.node;
 
-import umleditor.domain.BaseElement;
 import umleditor.domain.DiagramElement;
 
 import java.awt.BasicStroke;
@@ -13,22 +12,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Composite extends BaseElement {
-    private final List<DiagramElement> children = new ArrayList<>();
+public class Composite extends Block {
+    private final List<Block> children = new ArrayList<>();
 
     public Composite(List<DiagramElement> elements) {
         if (elements != null) {
             for (DiagramElement element : elements) {
-                if (element != null) {
-                    element.setSelected(false);
-                    element.setHovered(false);
-                    children.add(element);
-                }
+                addElementToChildren(element);
             }
         }
     }
 
-    public List<DiagramElement> getChildren() {
+    public List<Block> getChildren() {
         return Collections.unmodifiableList(children);
     }
 
@@ -36,15 +31,18 @@ public class Composite extends BaseElement {
         return new ArrayList<>(children);
     }
 
-    public List<String> getContainedNodeIds() {
+    @Override
+    public List<String> collectOwnedNodeIds() {
         List<String> ids = new ArrayList<>();
-        collectNodeIds(children, ids);
+        for (Block child : children) {
+            ids.addAll(child.collectOwnedNodeIds());
+        }
         return ids;
     }
 
     @Override
     public void moveBy(int dx, int dy) {
-        for (DiagramElement child : children) {
+        for (Block child : children) {
             child.moveBy(dx, dy);
         }
     }
@@ -60,7 +58,7 @@ public class Composite extends BaseElement {
         int maxX = Integer.MIN_VALUE;
         int maxY = Integer.MIN_VALUE;
 
-        for (DiagramElement child : children) {
+        for (Block child : children) {
             Rectangle bounds = child.getBounds();
             minX = Math.min(minX, bounds.x);
             minY = Math.min(minY, bounds.y);
@@ -78,7 +76,7 @@ public class Composite extends BaseElement {
 
     @Override
     public void draw(Graphics2D g2) {
-        for (DiagramElement child : children) {
+        for (Block child : children) {
             child.draw(g2);
         }
 
@@ -98,17 +96,29 @@ public class Composite extends BaseElement {
         g2.setStroke(oldStroke);
     }
 
-    private void collectNodeIds(List<DiagramElement> elements, List<String> out) {
-        for (DiagramElement element : elements) {
-            if (element instanceof Node) {
-                out.add(element.getID());
-                continue;
-            }
-
-            if (element instanceof Composite composite) {
-                collectNodeIds(composite.getChildren(), out);
-            }
+    private void addElementToChildren(DiagramElement element) {
+        if (!(element instanceof Block block)) {
+            return;
         }
+
+        addBlockToChildren(block);
+    }
+
+    private void addBlockToChildren(Block block) {
+        if (block instanceof Composite composite) {
+            for (Block child : composite.getChildren()) {
+                addDetachedChild(child);
+            }
+            return;
+        }
+
+        addDetachedChild(block);
+    }
+
+    private void addDetachedChild(Block child) {
+        child.setSelected(false);
+        child.setHovered(false);
+        children.add(child);
     }
 }
 

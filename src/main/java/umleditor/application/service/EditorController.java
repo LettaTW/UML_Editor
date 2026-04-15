@@ -8,13 +8,10 @@ import umleditor.application.tools.Tool;
 import umleditor.application.tools.ToolManager;
 import umleditor.domain.DiagramElement;
 import umleditor.domain.DiagramDocument;
-import umleditor.domain.link.Link;
-import umleditor.domain.node.Composite;
 import umleditor.domain.node.Node;
 import umleditor.enumtype.ToolMode;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 
 import static umleditor.config.EditorDefaults.DEFAULT_NODE_HEIGHT;
@@ -26,23 +23,33 @@ public class EditorController {
 
     private final DiagramDocument document;
     private final ToolManager toolManager;
+    private final NodeFactory nodeFactory;
+    private final GroupService groupService;
+    private final LabelWorkflowService labelWorkflowService;
 
     public EditorController() {
         this.document = new DiagramDocument();
         this.toolManager = new ToolManager();
+        this.nodeFactory = new NodeFactory();
+        SelectionQueryService selectionQueryService = new SelectionQueryService(document);
+        this.groupService = new GroupService(document, selectionQueryService);
+        this.labelWorkflowService = new LabelWorkflowService(selectionQueryService);
+        SelectionStateService selectionStateService = new SelectionStateService(document);
+        SelectInteractionStateService interactionStateService = new SelectInteractionStateService();
+        LinkFactory linkFactory = new LinkFactory();
         PointerTargetingService pointerTargetingService = new PointerTargetingService(document);
-        ResizeGestureService resizeGestureService = new ResizeGestureService();
+        ResizeService resizeService = new ResizeService();
         ElementTransformService elementTransformService = new DefaultElementTransformService(document);
 
         toolManager.registerTool(
                 ToolMode.SELECT,
-                new SelectTool(document, pointerTargetingService, resizeGestureService, elementTransformService)
+                new SelectTool(selectionStateService, pointerTargetingService, resizeService, elementTransformService, interactionStateService)
         );
-        toolManager.registerTool(ToolMode.CREATE_RECT, new CreateRectTool(document));
-        toolManager.registerTool(ToolMode.CREATE_OVAL, new CreateOvalTool(document));
-        toolManager.registerTool(ToolMode.LINK_ASSOCIATION, new DragCreateLinkTool(document, ToolMode.LINK_ASSOCIATION, pointerTargetingService));
-        toolManager.registerTool(ToolMode.LINK_GENERALIZATION, new DragCreateLinkTool(document, ToolMode.LINK_GENERALIZATION, pointerTargetingService));
-        toolManager.registerTool(ToolMode.LINK_COMPOSITION, new DragCreateLinkTool(document, ToolMode.LINK_COMPOSITION, pointerTargetingService));
+        toolManager.registerTool(ToolMode.CREATE_RECT, new CreateRectTool(document, nodeFactory));
+        toolManager.registerTool(ToolMode.CREATE_OVAL, new CreateOvalTool(document, nodeFactory));
+        toolManager.registerTool(ToolMode.LINK_ASSOCIATION, new DragCreateLinkTool(document, ToolMode.LINK_ASSOCIATION, linkFactory, pointerTargetingService));
+        toolManager.registerTool(ToolMode.LINK_GENERALIZATION, new DragCreateLinkTool(document, ToolMode.LINK_GENERALIZATION, linkFactory, pointerTargetingService));
+        toolManager.registerTool(ToolMode.LINK_COMPOSITION, new DragCreateLinkTool(document, ToolMode.LINK_COMPOSITION, linkFactory, pointerTargetingService));
 
         toolManager.setTool(ToolMode.SELECT);
     }
@@ -64,14 +71,14 @@ public class EditorController {
     }
 
     public void createDefaultNodeAt(ToolMode mode, int x, int y) {
-        if (!mode.isCreateMode()) {
+        if (!nodeFactory.isCreateMode(mode)) {
             return;
         }
         // Center the new node at (x, y) by adjusting the top-left corner position
         int left = x - (DEFAULT_NODE_WIDTH / 2);
         int top = y - (DEFAULT_NODE_HEIGHT / 2);
         Rectangle bounds = new Rectangle(left, top, DEFAULT_NODE_WIDTH, DEFAULT_NODE_HEIGHT);
-        Node createdNode = mode.createNode(bounds);
+        Node createdNode = nodeFactory.createNode(mode, bounds);
         if (createdNode == null) {
             return;
         }
@@ -96,7 +103,7 @@ public class EditorController {
 
     public void onMouseReleased(int x, int y) {
         boolean shouldRestore = getCurrentTool().mouseReleased(new Point(x, y));
-        if (shouldRestore && toolManager.getCurrentMode().isCreateMode()) {
+        if (shouldRestore && nodeFactory.isCreateMode(toolManager.getCurrentMode())) {
             toolManager.restorePreviousTool();
         }
     }
@@ -110,66 +117,23 @@ public class EditorController {
     }
 
     public boolean groupSelected() {
-        if (!canGroupSelected()) {
-            return false;
-        }
-
-        List<DiagramElement> groupable = getSelectedElements();
-
-        for (DiagramElement element : groupable) {
-            document.removeElement(element);
-            element.setSelected(false);
-            element.setHovered(false);
-        }
-
-        Composite composite = new Composite(groupable);
-        document.addElement(composite);
-
-        for (DiagramElement element : document.getElements()) {
-            element.setSelected(element == composite);
-        }
-        return true;
+        return groupService.groupSelected();
     }
 
     public boolean ungroupSelected() {
-        if (!canUngroupSelected()) {
-            return false;
-        }
-
-        Composite composite = (Composite) getSelectedElements().get(0);
-
-        document.removeElement(composite);
-        List<DiagramElement> children = composite.releaseChildren();
-        for (DiagramElement child : children) {
-            child.setSelected(false);
-            child.setHovered(false);
-            document.addElement(child);
-        }
-        return true;
+        return groupService.ungroupSelected();
     }
 
     public boolean canGroupSelected() {
-        List<DiagramElement> selected = getSelectedElements();
-        if (selected.size() < 2) {
-            return false;
-        }
-
-        for (DiagramElement element : selected) {
-            if (element instanceof Link) {
-                return false;
-            }
-        }
-
-        return true;
+        return groupService.canGroupSelected();
     }
 
     public boolean canUngroupSelected() {
-        List<DiagramElement> selected = getSelectedElements();
-        return selected.size() == 1 && selected.get(0) instanceof Composite;
+        return groupService.canUngroupSelected();
     }
 
     public boolean canEditLabelSelection() {
-        return getSingleSelectedBasicNode() != null;
+        return labelWorkflowService.canEditLabelSelection();
     }
 
     public LabelEditState getSelectedBasicNodeLabelState() {
@@ -177,50 +141,21 @@ public class EditorController {
             return null;
         }
 
-        Node node = getSingleSelectedBasicNode();
-        if (node == null) {
+        Node element = labelWorkflowService.getSingleSelectedNode();
+        if (element == null) {
             return null;
         }
-        return new LabelEditState(node.getLabelText(), node.getFillColor());
+        return new LabelEditState(element.getLabelText(), element.getFillColor());
     }
 
     public boolean updateSelectedBasicNodeLabel(String text, Color fillColor) {
-        Node node = getSingleSelectedBasicNode();
-        if (node == null || text == null || fillColor == null) {
-            return false;
-        }
-
-        node.setLabelText(text);
-        node.setFillColor(fillColor);
-        return true;
+        return labelWorkflowService.updateSelectedLabel(text, fillColor);
     }
 
     public void drawToolOverlay(Graphics2D g2) {
         getCurrentTool().drawOverlay(g2);
     }
 
-    private List<DiagramElement> getSelectedElements() {
-        List<DiagramElement> selected = new ArrayList<>();
-        for (DiagramElement element : document.getElements()) {
-            if (element.isSelected()) {
-                selected.add(element);
-            }
-        }
-        return selected;
-    }
-
-    private Node getSingleSelectedBasicNode() {
-        List<DiagramElement> selected = getSelectedElements();
-        if (selected.size() != 1) {
-            return null;
-        }
-
-        DiagramElement element = selected.get(0);
-        if (!(element instanceof Node node)) {
-            return null;
-        }
-        return node;
-    }
 
     private Tool getCurrentTool() {
         Tool tool = toolManager.getCurrentTool();

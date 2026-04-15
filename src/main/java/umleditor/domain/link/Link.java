@@ -1,13 +1,14 @@
 package umleditor.domain.link;
 
 import umleditor.domain.BaseElement;
+import umleditor.domain.capability.NodeTransformReactable;
 import umleditor.domain.model.Port;
 
 import java.awt.*;
 import java.awt.geom.Line2D;
 import java.util.List;
 
-public abstract class Link extends BaseElement {
+public abstract class Link extends BaseElement implements NodeTransformReactable {
     private final String sourceOwnerId;
     private final String targetOwnerId;
     protected Point sourcePoint;
@@ -23,11 +24,11 @@ public abstract class Link extends BaseElement {
     public String getSourceOwnerId() {
         return sourceOwnerId;
     }
-
     public String getTargetOwnerId() {
         return targetOwnerId;
     }
 
+    @Override
     public void onNodeMoved(String nodeId, int dx, int dy) {
         if (sourceOwnerId.equals(nodeId)) {
             sourcePoint.translate(dx, dy);
@@ -37,6 +38,7 @@ public abstract class Link extends BaseElement {
         }
     }
 
+    @Override
     public void onNodeReshaped(String nodeId, List<Port> ports) {
         if (ports == null || ports.isEmpty()) {
             return;

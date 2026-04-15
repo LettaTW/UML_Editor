@@ -3,6 +3,7 @@ package umleditor.application.service;
 import umleditor.domain.DiagramDocument;
 import umleditor.domain.DiagramElement;
 import umleditor.domain.model.Port;
+import umleditor.domain.node.Node;
 
 import java.awt.*;
 
@@ -33,11 +34,11 @@ public class PointerTargetingService {
         int topDepth = MAX_DEPTH + 1;
 
         for (DiagramElement element : document.getElements()) {
-            if (element.getPorts().isEmpty()) {
+            if (!(element instanceof Node node)) {
                 continue;
             }
 
-            Port candidate = element.findPortAt(p);
+            Port candidate = node.findPortAt(p);
             if (candidate == null) {
                 continue;
             }
@@ -82,7 +83,7 @@ public class PointerTargetingService {
         int topDepth = MAX_DEPTH + 1;
 
         for (DiagramElement element : document.getElements()) {
-            if (element.getPorts().isEmpty()) {
+            if (!(element instanceof Node)) {
                 continue;
             }
 

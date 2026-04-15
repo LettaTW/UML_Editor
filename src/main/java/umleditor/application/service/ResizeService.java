@@ -5,7 +5,7 @@ import umleditor.domain.model.Port;
 
 import java.awt.*;
 
-public class ResizeGestureService {
+public class ResizeService {
     public enum ResizeMode {
         CORNER,
         VERTICAL_EDGE,
