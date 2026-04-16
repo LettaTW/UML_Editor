@@ -6,7 +6,8 @@ import umleditor.domain.capability.HitTestable;
 public interface DiagramElement extends Drawable, HitTestable {
     String getID();
 
-    // about depth information
+    // Depth semantics:
+    // smaller value => visually on top, larger value => visually below.
     int getDepth();
     void setDepth(int depth);
 

@@ -5,7 +5,8 @@ import umleditor.domain.DocumentEvent;
 import umleditor.domain.DocumentObserver;
 import umleditor.enumtype.ToolMode;
 
-import javax.swing.JColorChooser;
+import javax.swing.BorderFactory;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -14,9 +15,15 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
-import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+
+import static umleditor.config.EditorDefaults.LABEL_PRESET_COLORS;
+import static umleditor.config.EditorDefaults.LABEL_PRESET_NAMES;
 
 public class EditorMenuBar extends JMenuBar implements DocumentObserver {
     private final EditorController controller;
@@ -71,15 +78,67 @@ public class EditorMenuBar extends JMenuBar implements DocumentObserver {
             return;
         }
 
-        JTextField nameField = new JTextField(current.text(), 24);
-        JColorChooser colorChooser = new JColorChooser(current.fillColor());
+        Color[] presetColors = LABEL_PRESET_COLORS;
+        String[] presetNames = LABEL_PRESET_NAMES;
+        int presetCount = Math.min(presetColors.length, presetNames.length);
+        if (presetCount == 0) {
+            return;
+        }
 
-        JPanel panel = new JPanel(new BorderLayout(0, 8));
-        JPanel namePanel = new JPanel(new BorderLayout(8, 0));
-        namePanel.add(new JLabel("Label Name:"), BorderLayout.WEST);
-        namePanel.add(nameField, BorderLayout.CENTER);
-        panel.add(namePanel, BorderLayout.NORTH);
-        panel.add(colorChooser, BorderLayout.CENTER);
+        JTextField nameField = new JTextField(current.text(), 24);
+        String[] dialogColorNames = new String[presetCount];
+        for (int i = 0; i < presetCount; i++) {
+            dialogColorNames[i] = presetNames[i];
+        }
+        JComboBox<String> colorPresetBox = new JComboBox<>(dialogColorNames);
+        int selectedColorIndex = findColorPresetIndex(current.fillColor(), presetColors, presetCount);
+        colorPresetBox.setSelectedIndex(selectedColorIndex);
+
+        JPanel previewPanel = new JPanel();
+        previewPanel.setPreferredSize(new Dimension(180, 40));
+        previewPanel.setBorder(BorderFactory.createLineBorder(new Color(120, 120, 120)));
+        JLabel previewLabel = new JLabel("", JLabel.CENTER);
+        previewPanel.add(previewLabel);
+
+        Runnable refreshPreview = () -> {
+            String text = nameField.getText();
+            previewLabel.setText(text == null || text.trim().isEmpty() ? "Preview" : text.trim());
+            previewPanel.setBackground(presetColors[colorPresetBox.getSelectedIndex()]);
+        };
+        nameField.addActionListener(e -> refreshPreview.run());
+        nameField.getDocument().addDocumentListener(new SimpleDocumentAdapter(refreshPreview));
+        colorPresetBox.addActionListener(e -> refreshPreview.run());
+        refreshPreview.run();
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(6, 6, 6, 6);
+        c.anchor = GridBagConstraints.WEST;
+
+        c.gridx = 0;
+        c.gridy = 0;
+        panel.add(new JLabel("Name"), c);
+        c.gridx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1.0;
+        panel.add(nameField, c);
+
+        c.gridx = 0;
+        c.gridy = 1;
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0;
+        panel.add(new JLabel("Color"), c);
+        c.gridx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(colorPresetBox, c);
+
+        c.gridx = 0;
+        c.gridy = 2;
+        c.fill = GridBagConstraints.NONE;
+        panel.add(new JLabel("Preview"), c);
+        c.gridx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(previewPanel, c);
 
         int option = JOptionPane.showConfirmDialog(
                 owner,
@@ -93,8 +152,42 @@ public class EditorMenuBar extends JMenuBar implements DocumentObserver {
         }
 
         String nextText = nameField.getText();
-        Color nextColor = colorChooser.getColor();
+        Color nextColor = presetColors[colorPresetBox.getSelectedIndex()];
         controller.updateSelectedBasicNodeLabel(nextText, nextColor);
+    }
+
+    private int findColorPresetIndex(Color current, Color[] presets, int count) {
+        if (current != null) {
+            for (int i = 0; i < count; i++) {
+                if (current.equals(presets[i])) {
+                    return i;
+                }
+            }
+        }
+        return 0;
+    }
+
+    private static class SimpleDocumentAdapter implements javax.swing.event.DocumentListener {
+        private final Runnable onChange;
+
+        private SimpleDocumentAdapter(Runnable onChange) {
+            this.onChange = onChange;
+        }
+
+        @Override
+        public void insertUpdate(javax.swing.event.DocumentEvent e) {
+            onChange.run();
+        }
+
+        @Override
+        public void removeUpdate(javax.swing.event.DocumentEvent e) {
+            onChange.run();
+        }
+
+        @Override
+        public void changedUpdate(javax.swing.event.DocumentEvent e) {
+            onChange.run();
+        }
     }
 }
 

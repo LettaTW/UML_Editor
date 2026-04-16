@@ -6,6 +6,8 @@ import umleditor.domain.node.Composite;
 
 import java.util.List;
 
+import static umleditor.config.EditorDefaults.MIN_DEPTH;
+
 public class GroupService {
     private final DiagramDocument document;
     private final SelectionQueryService selectionQueryService;
@@ -36,6 +38,7 @@ public class GroupService {
         }
 
         List<DiagramElement> groupable = selectionQueryService.getSelectedElementsForRenderOrder();
+        int compositeDepth = findBackDepth(groupable);
         for (DiagramElement element : groupable) {
             document.removeElement(element);
             element.setSelected(false);
@@ -43,7 +46,8 @@ public class GroupService {
         }
 
         Composite composite = new Composite(groupable);
-        document.addElement(composite);
+        composite.setDepth(compositeDepth);
+        document.addElementPreserveDepth(composite);
 
         for (DiagramElement element : document.getElements()) {
             element.setSelected(element == composite);
@@ -63,14 +67,22 @@ public class GroupService {
         }
 
         document.removeElement(composite);
-        List<DiagramElement> children = composite.releaseChildren();
+        List<DiagramElement> children = composite.releaseChildrenWithAbsoluteDepth(composite.getDepth());
         for (DiagramElement child : children) {
             child.setSelected(false);
             child.setHovered(false);
-            document.addElement(child);
+            document.addElementPreserveDepth(child);
         }
         document.notifySelectionChanged();
         return true;
+    }
+
+    private int findBackDepth(List<DiagramElement> elements) {
+        int maxDepth = Integer.MIN_VALUE;
+        for (DiagramElement element : elements) {
+            maxDepth = Math.max(maxDepth, element.getDepth());
+        }
+        return maxDepth == Integer.MIN_VALUE ? MIN_DEPTH : maxDepth;
     }
 }
 

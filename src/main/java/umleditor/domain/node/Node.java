@@ -115,11 +115,39 @@ public abstract class Node extends Block {
             return;
         }
 
-        g2.setColor(Color.BLACK);
+        g2.setColor(isSelected()
+                ? EditorDefaults.NODE_SELECTED_PORT_COLOR
+                : EditorDefaults.NODE_HOVER_PORT_COLOR);
         for (Port port : ports) {
             Rectangle b = port.getBounds();
             g2.fillRect(b.x, b.y, b.width, b.height);
         }
+    }
+
+    protected void drawRectInteractionOutline(Graphics2D g2, Rectangle r) {
+        if (!isSelected() && !isHovered()) {
+            return;
+        }
+
+        Color oldColor = g2.getColor();
+        g2.setColor(isSelected()
+                ? EditorDefaults.NODE_SELECTED_OUTLINE_COLOR
+                : EditorDefaults.NODE_HOVER_OUTLINE_COLOR);
+        g2.drawRect(r.x - 2, r.y - 2, r.width + 4, r.height + 4);
+        g2.setColor(oldColor);
+    }
+
+    protected void drawOvalInteractionOutline(Graphics2D g2, Rectangle r) {
+        if (!isSelected() && !isHovered()) {
+            return;
+        }
+
+        Color oldColor = g2.getColor();
+        g2.setColor(isSelected()
+                ? EditorDefaults.NODE_SELECTED_OUTLINE_COLOR
+                : EditorDefaults.NODE_HOVER_OUTLINE_COLOR);
+        g2.drawOval(r.x - 2, r.y - 2, r.width + 4, r.height + 4);
+        g2.setColor(oldColor);
     }
 
     public abstract void draw(Graphics2D g2);

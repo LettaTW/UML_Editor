@@ -26,6 +26,7 @@ public class Rect extends Node {
         g2.fillRect(r.x, r.y, r.width, r.height);
         g2.setColor(Color.BLACK);
         g2.drawRect(r.x, r.y, r.width, r.height);
+        drawRectInteractionOutline(g2, r);
         drawCenteredLabel(g2, r);
         drawPortsIfNeeded(g2);
     }

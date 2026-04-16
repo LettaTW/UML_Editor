@@ -14,10 +14,23 @@ public class SelectionStateService {
     }
 
     public void selectSingle(DiagramElement target) {
+        if (target == null) {
+            clearSelection();
+            return;
+        }
+
+        boolean alreadySelected = target.isSelected();
         for (DiagramElement element : document.getElements()) {
             element.setSelected(element == target);
         }
-        document.bringToFront(target);
+
+        if (document.isCompositeElement(target)) {
+            // Composite should be raised on every click, while keeping grouped internals isolated.
+            document.bringToFrontIsolated(target);
+        } else if (!alreadySelected) {
+            // Avoid unnecessary depth churn when repeatedly clicking the same non-composite element.
+            document.bringToFront(target);
+        }
         document.notifySelectionChanged();
     }
 

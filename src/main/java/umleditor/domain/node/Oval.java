@@ -36,6 +36,7 @@ public class Oval extends Node {
         g2.fillOval(r.x, r.y, r.width, r.height);
         g2.setColor(Color.BLACK);
         g2.drawOval(r.x, r.y, r.width, r.height);
+        drawOvalInteractionOutline(g2, r);
         drawCenteredLabel(g2, r);
         drawPortsIfNeeded(g2);
     }

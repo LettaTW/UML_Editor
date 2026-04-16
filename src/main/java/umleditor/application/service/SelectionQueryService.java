@@ -52,11 +52,7 @@ public class SelectionQueryService {
         }
 
         DiagramElement element = selected.get(0);
-        Composite composite = document.asComposite(element);
-        if (composite == null) {
-            return null;
-        }
-        return composite;
+        return document.asComposite(element);
     }
 }
 

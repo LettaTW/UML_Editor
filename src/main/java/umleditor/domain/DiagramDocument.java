@@ -40,6 +40,14 @@ public class DiagramDocument {
         notifyObservers(DocumentEvent.elementAdded(block));
     }
 
+    public void addBlockPreserveDepth(Block block) {
+        if (block == null) {
+            return;
+        }
+        blocks.add(block);
+        notifyObservers(DocumentEvent.elementAdded(block));
+    }
+
     public boolean removeBlock(Block block) {
         boolean removed = blocks.remove(block);
         if (removed) {
@@ -58,6 +66,14 @@ public class DiagramDocument {
         }
         links.add(link);
         bringToFront(link);
+        notifyObservers(DocumentEvent.elementAdded(link));
+    }
+
+    public void addLinkPreserveDepth(Link link) {
+        if (link == null) {
+            return;
+        }
+        links.add(link);
         notifyObservers(DocumentEvent.elementAdded(link));
     }
 
@@ -86,6 +102,19 @@ public class DiagramDocument {
         }
     }
 
+    public void addElementPreserveDepth(DiagramElement element) {
+        Link link = asLink(element);
+        if (link != null) {
+            addLinkPreserveDepth(link);
+            return;
+        }
+
+        Block block = asBlock(element);
+        if (block != null) {
+            addBlockPreserveDepth(block);
+        }
+    }
+
     public void removeElement(DiagramElement element) {
         Link link = asLink(element);
         if (link != null) {
@@ -109,8 +138,27 @@ public class DiagramDocument {
 
     public List<DiagramElement> getElementsForRender() {
         List<DiagramElement> ordered = new ArrayList<>(getElements());
-        ordered.sort(Comparator.comparingInt(DiagramElement::getDepth).reversed());
+        // Depth rule: smaller depth is visually above larger depth.
+        // Render order is back -> front, so larger depth draws first.
+        // Link rule: links are above normal blocks.
+        // Selected composite rule: selected composite is drawn above links,
+        // so external links do not visually pass through the active group.
+        ordered.sort(
+                Comparator
+                        .comparingInt(this::renderPriority)
+                        .thenComparing(Comparator.comparingInt(DiagramElement::getDepth).reversed())
+        );
         return Collections.unmodifiableList(ordered);
+    }
+
+    private int renderPriority(DiagramElement element) {
+        if (isCompositeElement(element) && element.isSelected()) {
+            return 2;
+        }
+        if (isLinkElement(element)) {
+            return 1;
+        }
+        return 0;
     }
 
     public void bringToFront(DiagramElement target) {
@@ -119,11 +167,37 @@ public class DiagramDocument {
             return;
         }
 
+        int targetDepth = target.getDepth();
+        if (targetDepth <= MIN_DEPTH) {
+            return;
+        }
+
         for (DiagramElement element : elements) {
             if (element == target) {
                 continue;
             }
-            element.setDepth(Math.min(MAX_DEPTH, element.getDepth() + 1));
+
+            if (element.getDepth() < targetDepth) {
+                element.setDepth(Math.min(MAX_DEPTH, element.getDepth() + 1));
+            }
+        }
+
+        target.setDepth(MIN_DEPTH);
+    }
+
+    public void bringToFrontIsolated(DiagramElement target) {
+        if (target == null || !getElements().contains(target)) {
+            return;
+        }
+
+        // Resolve MIN_DEPTH ties so isolated-front target is visually top-most.
+        for (DiagramElement element : getElements()) {
+            if (element == target) {
+                continue;
+            }
+            if (element.getDepth() == MIN_DEPTH) {
+                element.setDepth(Math.min(MAX_DEPTH, MIN_DEPTH + 1));
+            }
         }
 
         target.setDepth(MIN_DEPTH);
@@ -131,17 +205,10 @@ public class DiagramDocument {
 
     public DiagramElement findTopElementAt(Point p) {
         DiagramElement topElement = null;
-        int topDepth = MAX_DEPTH + 1;
-
-        for (DiagramElement element : getElements()) {
-            if (!element.contains(p)) {
-                continue;
-            }
-
-            int depth = element.getDepth();
-            if (topElement == null || depth < topDepth || depth == topDepth) {
+        for (DiagramElement element : getElementsForRender()) {
+            if (element.contains(p)) {
+                // getElementsForRender() is back -> front, so the last hit is top-most.
                 topElement = element;
-                topDepth = depth;
             }
         }
 

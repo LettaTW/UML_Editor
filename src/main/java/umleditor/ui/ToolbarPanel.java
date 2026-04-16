@@ -5,16 +5,16 @@ import umleditor.domain.DocumentEvent;
 import umleditor.domain.DocumentObserver;
 import umleditor.enumtype.ToolMode;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.BorderFactory;
-import java.awt.BorderLayout;
+import javax.swing.border.Border;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -27,15 +27,19 @@ import static umleditor.config.EditorDefaults.TOOLBAR_BUTTON_HEIGHT;
 import static umleditor.config.EditorDefaults.TOOLBAR_BUTTON_WIDTH;
 
 public class ToolbarPanel extends JPanel implements DocumentObserver {
+    private static final Border DEFAULT_BUTTON_BORDER = BorderFactory.createLineBorder(new Color(190, 190, 190));
+    private static final Border HOVER_BUTTON_BORDER = BorderFactory.createLineBorder(new Color(110, 110, 110));
+    private static final Border ACTIVE_BUTTON_BORDER = BorderFactory.createLineBorder(new Color(40, 40, 40));
+
     private final EditorController controller;
     private final EditorCanvas canvas;
 
-    private final JButton selectButton = new JButton("Select");
-    private final JButton associationButton = new JButton("Assoc");
-    private final JButton generalizationButton = new JButton("Gen");
-    private final JButton compositionButton = new JButton("Comp");
-    private final JButton rectButton = new JButton("Rect");
-    private final JButton ovalButton = new JButton("Oval");
+    private final JButton selectButton = new ToolButton("Select");
+    private final JButton associationButton = new ToolButton("Assoc");
+    private final JButton generalizationButton = new ToolButton("Gen");
+    private final JButton compositionButton = new ToolButton("Comp");
+    private final JButton rectButton = new ToolButton("Rect");
+    private final JButton ovalButton = new ToolButton("Oval");
 
     public ToolbarPanel(EditorController controller, EditorCanvas canvas) {
         super(new GridBagLayout());
@@ -91,20 +95,68 @@ public class ToolbarPanel extends JPanel implements DocumentObserver {
         buttonConstraints.insets = new Insets(5, 3, 5, 3);
         button.setPreferredSize(new Dimension(TOOLBAR_BUTTON_WIDTH, TOOLBAR_BUTTON_HEIGHT));
         button.setFont(button.getFont().deriveFont(Font.PLAIN, (float) TOOLBAR_BUTTON_FONT_SIZE));
+        button.setRolloverEnabled(true);
         button.setFocusPainted(false);
+        button.setContentAreaFilled(false);
+        button.setOpaque(false);
+        button.setBorder(DEFAULT_BUTTON_BORDER);
+        button.setBorderPainted(true);
+        button.getModel().addChangeListener(e -> refreshToolbar());
 
         add(button, buttonConstraints);
     }
 
     private void applyModeStyle(JButton button, boolean active) {
-        button.setOpaque(true);
-        button.setBorderPainted(false);
-        if (active) {
+        boolean pressed = button.getModel().isPressed();
+        boolean hover = button.getModel().isRollover();
+        Color defaultBg = UIManager.getColor("Button.background");
+        if (defaultBg == null) {
+            defaultBg = new Color(238, 238, 238);
+        }
+
+        Color defaultFg = UIManager.getColor("Button.foreground");
+        if (defaultFg == null) {
+            defaultFg = Color.BLACK;
+        }
+
+        button.setBorderPainted(true);
+        if (pressed) {
             button.setBackground(Color.BLACK);
             button.setForeground(Color.WHITE);
+            button.setBorder(ACTIVE_BUTTON_BORDER);
+        } else if (active) {
+            button.setBackground(Color.BLACK);
+            button.setForeground(Color.WHITE);
+            button.setBorder(ACTIVE_BUTTON_BORDER);
+        } else if (hover) {
+            button.setBackground(darken(defaultBg, 0.08f));
+            button.setForeground(defaultFg);
+            button.setBorder(HOVER_BUTTON_BORDER);
         } else {
-            button.setBackground(UIManager.getColor("Button.background"));
-            button.setForeground(UIManager.getColor("Button.foreground"));
+            button.setBackground(defaultBg);
+            button.setForeground(defaultFg);
+            button.setBorder(DEFAULT_BUTTON_BORDER);
+        }
+    }
+
+    private Color darken(Color color, float ratio) {
+        float clamped = Math.max(0f, Math.min(1f, ratio));
+        int r = Math.max(0, Math.round(color.getRed() * (1f - clamped)));
+        int g = Math.max(0, Math.round(color.getGreen() * (1f - clamped)));
+        int b = Math.max(0, Math.round(color.getBlue() * (1f - clamped)));
+        return new Color(r, g, b);
+    }
+
+    private static class ToolButton extends JButton {
+        private ToolButton(String text) {
+            super(text);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            g.setColor(getBackground());
+            g.fillRect(0, 0, getWidth(), getHeight());
+            super.paintComponent(g);
         }
     }
 
@@ -114,6 +166,7 @@ public class ToolbarPanel extends JPanel implements DocumentObserver {
             public void mousePressed(MouseEvent e) {
                 if (SwingUtilities.isLeftMouseButton(e)) {
                     controller.setTemporaryTool(mode);
+                    refreshToolbar();
                 }
             }
 
@@ -129,8 +182,8 @@ public class ToolbarPanel extends JPanel implements DocumentObserver {
                 }
 
                 controller.restorePreviousTool();
+                refreshToolbar();
             }
         });
     }
 }
-
