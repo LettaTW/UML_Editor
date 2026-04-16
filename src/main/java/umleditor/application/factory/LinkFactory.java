@@ -1,4 +1,4 @@
-package umleditor.application.service;
+package umleditor.application.factory;
 
 import umleditor.domain.link.AssociationLink;
 import umleditor.domain.link.CompositionLink;

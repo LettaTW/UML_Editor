@@ -2,7 +2,6 @@ package umleditor.application.service;
 
 import umleditor.domain.DiagramDocument;
 import umleditor.domain.DiagramElement;
-import umleditor.domain.link.Link;
 
 import java.awt.Rectangle;
 import java.util.List;
@@ -19,12 +18,14 @@ public class SelectionStateService {
             element.setSelected(element == target);
         }
         document.bringToFront(target);
+        document.notifySelectionChanged();
     }
 
     public void clearSelection() {
         for (DiagramElement element : document.getElements()) {
             element.setSelected(false);
         }
+        document.notifySelectionChanged();
     }
 
     public void selectByBox(Rectangle box) {
@@ -32,7 +33,7 @@ public class SelectionStateService {
         List<DiagramElement> elements = document.getElements();
 
         for (DiagramElement element : elements) {
-            boolean selected = !(element instanceof Link) && box.contains(element.getBounds());
+            boolean selected = !document.isLinkElement(element) && box.contains(element.getBounds());
             element.setSelected(selected);
             if (selected) {
                 anySelected = true;
@@ -41,7 +42,10 @@ public class SelectionStateService {
 
         if (!anySelected) {
             clearSelection();
+            return;
         }
+
+        document.notifySelectionChanged();
     }
 }
 

@@ -2,6 +2,9 @@ package umleditor.domain;
 
 import umleditor.domain.link.Link;
 import umleditor.domain.node.Block;
+import umleditor.domain.node.Composite;
+import umleditor.domain.node.Node;
+import umleditor.enumtype.ToolMode;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -15,6 +18,18 @@ import static umleditor.config.EditorDefaults.MIN_DEPTH;
 public class DiagramDocument {
     private final List<Block> blocks = new ArrayList<>();
     private final List<Link> links = new ArrayList<>();
+    private final List<DocumentObserver> observers = new ArrayList<>();
+
+    public void addObserver(DocumentObserver observer) {
+        if (observer == null || observers.contains(observer)) {
+            return;
+        }
+        observers.add(observer);
+    }
+
+    public void removeObserver(DocumentObserver observer) {
+        observers.remove(observer);
+    }
 
     public void addBlock(Block block) {
         if (block == null) {
@@ -22,10 +37,15 @@ public class DiagramDocument {
         }
         blocks.add(block);
         bringToFront(block);
+        notifyObservers(DocumentEvent.elementAdded(block));
     }
 
     public boolean removeBlock(Block block) {
-        return blocks.remove(block);
+        boolean removed = blocks.remove(block);
+        if (removed) {
+            notifyObservers(DocumentEvent.elementRemoved(block));
+        }
+        return removed;
     }
 
     public List<Block> getBlocks() {
@@ -38,10 +58,15 @@ public class DiagramDocument {
         }
         links.add(link);
         bringToFront(link);
+        notifyObservers(DocumentEvent.elementAdded(link));
     }
 
     public boolean removeLink(Link link) {
-        return links.remove(link);
+        boolean removed = links.remove(link);
+        if (removed) {
+            notifyObservers(DocumentEvent.elementRemoved(link));
+        }
+        return removed;
     }
 
     public List<Link> getLinks() {
@@ -49,22 +74,26 @@ public class DiagramDocument {
     }
 
     public void addElement(DiagramElement element) {
-        if (element instanceof Link link) {
+        Link link = asLink(element);
+        if (link != null) {
             addLink(link);
             return;
         }
 
-        if (element instanceof Block block) {
+        Block block = asBlock(element);
+        if (block != null) {
             addBlock(block);
         }
     }
 
     public boolean removeElement(DiagramElement element) {
-        if (element instanceof Link link) {
+        Link link = asLink(element);
+        if (link != null) {
             return removeLink(link);
         }
 
-        if (element instanceof Block block) {
+        Block block = asBlock(element);
+        if (block != null) {
             return removeBlock(block);
         }
 
@@ -117,6 +146,60 @@ public class DiagramDocument {
         }
 
         return topElement;
+    }
+
+    public boolean isBlockElement(DiagramElement element) {
+        return element instanceof Block;
+    }
+
+    public boolean isLinkElement(DiagramElement element) {
+        return element instanceof Link;
+    }
+
+    public boolean isNodeElement(DiagramElement element) {
+        return element instanceof Node;
+    }
+
+    public boolean isCompositeElement(DiagramElement element) {
+        return element instanceof Composite;
+    }
+
+    public Block asBlock(DiagramElement element) {
+        return element instanceof Block block ? block : null;
+    }
+
+    public Link asLink(DiagramElement element) {
+        return element instanceof Link link ? link : null;
+    }
+
+    public Node asNode(DiagramElement element) {
+        return element instanceof Node node ? node : null;
+    }
+
+    public Composite asComposite(DiagramElement element) {
+        return element instanceof Composite composite ? composite : null;
+    }
+
+    public void notifyElementUpdated(DiagramElement element) {
+        notifyObservers(DocumentEvent.elementUpdated(element));
+    }
+
+    public void notifySelectionChanged() {
+        notifyObservers(DocumentEvent.selectionChanged());
+    }
+
+    public void notifyHoverChanged() {
+        notifyObservers(DocumentEvent.hoverChanged());
+    }
+
+    public void notifyToolChanged(ToolMode toolMode) {
+        notifyObservers(DocumentEvent.toolChanged(toolMode));
+    }
+
+    private void notifyObservers(DocumentEvent event) {
+        for (DocumentObserver observer : observers) {
+            observer.onDocumentChanged(event);
+        }
     }
 
 }

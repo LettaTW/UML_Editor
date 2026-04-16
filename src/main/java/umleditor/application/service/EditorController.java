@@ -1,13 +1,13 @@
 package umleditor.application.service;
 
-import umleditor.application.tools.CreateOvalTool;
-import umleditor.application.tools.CreateRectTool;
-import umleditor.application.tools.DragCreateLinkTool;
-import umleditor.application.tools.SelectTool;
+import umleditor.application.factory.LinkFactory;
+import umleditor.application.factory.NodeFactory;
 import umleditor.application.tools.Tool;
+import umleditor.application.factory.ToolFactory;
 import umleditor.application.tools.ToolManager;
 import umleditor.domain.DiagramElement;
 import umleditor.domain.DiagramDocument;
+import umleditor.domain.DocumentObserver;
 import umleditor.domain.node.Node;
 import umleditor.enumtype.ToolMode;
 
@@ -25,7 +25,7 @@ public class EditorController {
     private final ToolManager toolManager;
     private final NodeFactory nodeFactory;
     private final GroupService groupService;
-    private final LabelWorkflowService labelWorkflowService;
+    private final LabelService labelService;
 
     public EditorController() {
         this.document = new DiagramDocument();
@@ -33,33 +33,49 @@ public class EditorController {
         this.nodeFactory = new NodeFactory();
         SelectionQueryService selectionQueryService = new SelectionQueryService(document);
         this.groupService = new GroupService(document, selectionQueryService);
-        this.labelWorkflowService = new LabelWorkflowService(selectionQueryService);
+        this.labelService = new LabelService(document, selectionQueryService);
+        ToolFactory toolFactory = getToolFactory();
+
+        for (ToolMode mode : ToolMode.values()) {
+            Tool tool = toolFactory.createTool(mode);
+            if (tool != null) {
+                toolManager.registerTool(mode, tool);
+            }
+        }
+
+        toolManager.setTool(ToolMode.SELECT);
+        document.notifyToolChanged(ToolMode.SELECT);
+    }
+
+    private ToolFactory getToolFactory() {
         SelectionStateService selectionStateService = new SelectionStateService(document);
         SelectInteractionStateService interactionStateService = new SelectInteractionStateService();
         LinkFactory linkFactory = new LinkFactory();
+        LinkCreationService linkCreationService = new LinkCreationService(document, linkFactory);
         PointerTargetingService pointerTargetingService = new PointerTargetingService(document);
         ResizeService resizeService = new ResizeService();
-        ElementTransformService elementTransformService = new DefaultElementTransformService(document);
-
-        toolManager.registerTool(
-                ToolMode.SELECT,
-                new SelectTool(selectionStateService, pointerTargetingService, resizeService, elementTransformService, interactionStateService)
+        ElementTransformService elementTransformService = new TransformService(document);
+        ToolFactory toolFactory = new ToolFactory(
+                document,
+                nodeFactory,
+                linkCreationService,
+                selectionStateService,
+                pointerTargetingService,
+                resizeService,
+                elementTransformService,
+                interactionStateService
         );
-        toolManager.registerTool(ToolMode.CREATE_RECT, new CreateRectTool(document, nodeFactory));
-        toolManager.registerTool(ToolMode.CREATE_OVAL, new CreateOvalTool(document, nodeFactory));
-        toolManager.registerTool(ToolMode.LINK_ASSOCIATION, new DragCreateLinkTool(document, ToolMode.LINK_ASSOCIATION, linkFactory, pointerTargetingService));
-        toolManager.registerTool(ToolMode.LINK_GENERALIZATION, new DragCreateLinkTool(document, ToolMode.LINK_GENERALIZATION, linkFactory, pointerTargetingService));
-        toolManager.registerTool(ToolMode.LINK_COMPOSITION, new DragCreateLinkTool(document, ToolMode.LINK_COMPOSITION, linkFactory, pointerTargetingService));
-
-        toolManager.setTool(ToolMode.SELECT);
+        return toolFactory;
     }
 
     public void setCurrentTool(ToolMode mode) {
         toolManager.setTool(mode);
+        document.notifyToolChanged(mode);
     }
 
     public void setTemporaryTool(ToolMode mode) {
         toolManager.setTemporaryTool(mode);
+        document.notifyToolChanged(mode);
     }
 
     public ToolMode getCurrentToolMode() {
@@ -68,6 +84,15 @@ public class EditorController {
 
     public void restorePreviousTool() {
         toolManager.restorePreviousTool();
+        document.notifyToolChanged(toolManager.getCurrentMode());
+    }
+
+    public void addDocumentObserver(DocumentObserver observer) {
+        document.addObserver(observer);
+    }
+
+    public void removeDocumentObserver(DocumentObserver observer) {
+        document.removeObserver(observer);
     }
 
     public void createDefaultNodeAt(ToolMode mode, int x, int y) {
@@ -133,7 +158,7 @@ public class EditorController {
     }
 
     public boolean canEditLabelSelection() {
-        return labelWorkflowService.canEditLabelSelection();
+        return labelService.canEditLabelSelection();
     }
 
     public LabelEditState getSelectedBasicNodeLabelState() {
@@ -141,7 +166,7 @@ public class EditorController {
             return null;
         }
 
-        Node element = labelWorkflowService.getSingleSelectedNode();
+        Node element = labelService.getSingleSelectedNode();
         if (element == null) {
             return null;
         }
@@ -149,7 +174,7 @@ public class EditorController {
     }
 
     public boolean updateSelectedBasicNodeLabel(String text, Color fillColor) {
-        return labelWorkflowService.updateSelectedLabel(text, fillColor);
+        return labelService.updateSelectedLabel(text, fillColor);
     }
 
     public void drawToolOverlay(Graphics2D g2) {

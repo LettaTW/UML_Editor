@@ -1,13 +1,16 @@
 package umleditor.application.service;
 
+import umleditor.domain.DiagramDocument;
 import umleditor.domain.node.Node;
 
 import java.awt.Color;
 
-public class LabelWorkflowService {
+public class LabelService {
     private final SelectionQueryService selectionQueryService;
+    private final DiagramDocument document;
 
-    public LabelWorkflowService(SelectionQueryService selectionQueryService) {
+    public LabelService(DiagramDocument document, SelectionQueryService selectionQueryService) {
+        this.document = document;
         this.selectionQueryService = selectionQueryService;
     }
 
@@ -27,7 +30,10 @@ public class LabelWorkflowService {
 
         node.setLabelText(text);
         node.setFillColor(fillColor);
+        document.notifyElementUpdated(node);
         return true;
     }
 }
+
+
 

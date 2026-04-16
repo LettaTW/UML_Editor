@@ -2,7 +2,9 @@ package umleditor.application.service;
 
 import umleditor.domain.DiagramDocument;
 import umleditor.domain.DiagramElement;
+import umleditor.domain.link.Link;
 import umleditor.domain.model.Port;
+import umleditor.domain.node.Block;
 import umleditor.domain.node.Node;
 
 import java.awt.*;
@@ -28,13 +30,22 @@ public class PointerTargetingService {
         return hit == null ? null : hit.port();
     }
 
+    public boolean isNodeElement(DiagramElement element) {
+        return document.isNodeElement(element);
+    }
+
+    public boolean isLinkElement(DiagramElement element) {
+        return document.isLinkElement(element);
+    }
+
     public PortHit findTopPortHitAt(Point p) {
         DiagramElement topOwner = null;
         Port topPort = null;
         int topDepth = MAX_DEPTH + 1;
 
-        for (DiagramElement element : document.getElements()) {
-            if (!(element instanceof Node node)) {
+        for (Block block : document.getBlocks()) {
+            Node node = document.asNode(block);
+            if (node == null) {
                 continue;
             }
 
@@ -43,9 +54,9 @@ public class PointerTargetingService {
                 continue;
             }
 
-            int depth = element.getDepth();
-            if (topPort == null || depth < topDepth || depth == topDepth) {
-                topOwner = element;
+            int depth = node.getDepth();
+            if (topPort == null || depth <= topDepth) {
+                topOwner = node;
                 topPort = candidate;
                 topDepth = depth;
             }
@@ -59,48 +70,53 @@ public class PointerTargetingService {
     }
 
     public void applyHoverAt(Point p) {
-        DiagramElement hoverTarget = findTopElementAt(p);
-        for (DiagramElement element : document.getElements()) {
-            element.setHovered(element == hoverTarget);
-        }
+        applyHoverState(findTopElementAt(p));
     }
 
     public void applyLinkDragHoverAt(Point p, int proximityPx) {
-        DiagramElement hoverNode = findTopNodeNear(p, proximityPx);
-        for (DiagramElement element : document.getElements()) {
-            element.setHovered(element == hoverNode);
-        }
+        applyHoverState(findTopNodeNear(p, proximityPx));
     }
 
     public void clearHover() {
-        for (DiagramElement element : document.getElements()) {
-            element.setHovered(false);
-        }
+        applyHoverState(null);
     }
 
     private DiagramElement findTopNodeNear(Point p, int proximityPx) {
         DiagramElement topNode = null;
         int topDepth = MAX_DEPTH + 1;
 
-        for (DiagramElement element : document.getElements()) {
-            if (!(element instanceof Node)) {
+        for (Block block : document.getBlocks()) {
+            Node node = document.asNode(block);
+            if (node == null) {
                 continue;
             }
 
-            Rectangle nearArea = element.getBounds();
+            Rectangle nearArea = node.getBounds();
             nearArea.grow(proximityPx, proximityPx);
             if (!nearArea.contains(p)) {
                 continue;
             }
 
-            int depth = element.getDepth();
-            if (topNode == null || depth < topDepth || depth == topDepth) {
-                topNode = element;
+            int depth = node.getDepth();
+            if (topNode == null || depth <= topDepth) {
+                topNode = node;
                 topDepth = depth;
             }
         }
 
         return topNode;
+    }
+
+    private void applyHoverState(DiagramElement hoverTarget) {
+        for (Block block : document.getBlocks()) {
+            block.setHovered(block == hoverTarget);
+        }
+
+        for (Link link : document.getLinks()) {
+            link.setHovered(link == hoverTarget);
+        }
+
+        document.notifyHoverChanged();
     }
 }
 

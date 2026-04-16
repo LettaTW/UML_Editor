@@ -42,10 +42,7 @@ public class SelectionQueryService {
         }
 
         DiagramElement element = selected.get(0);
-        if (!(element instanceof Node node)) {
-            return null;
-        }
-        return node;
+        return document.asNode(element);
     }
 
     public Composite getSingleSelectedComposite() {
@@ -55,7 +52,8 @@ public class SelectionQueryService {
         }
 
         DiagramElement element = selected.get(0);
-        if (!(element instanceof Composite composite)) {
+        Composite composite = document.asComposite(element);
+        if (composite == null) {
             return null;
         }
         return composite;

@@ -2,7 +2,6 @@ package umleditor.application.service;
 
 import umleditor.domain.DiagramDocument;
 import umleditor.domain.DiagramElement;
-import umleditor.domain.node.Block;
 import umleditor.domain.node.Composite;
 
 import java.util.List;
@@ -23,7 +22,7 @@ public class GroupService {
         }
 
         for (DiagramElement element : selected) {
-            if (!(element instanceof Block)) {
+            if (!document.isBlockElement(element)) {
                 return false;
             }
         }
@@ -49,6 +48,7 @@ public class GroupService {
         for (DiagramElement element : document.getElements()) {
             element.setSelected(element == composite);
         }
+        document.notifySelectionChanged();
         return true;
     }
 
@@ -69,6 +69,7 @@ public class GroupService {
             child.setHovered(false);
             document.addElement(child);
         }
+        document.notifySelectionChanged();
         return true;
     }
 }

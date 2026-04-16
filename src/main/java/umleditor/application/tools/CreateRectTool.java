@@ -1,6 +1,6 @@
 package umleditor.application.tools;
 
-import umleditor.application.service.NodeFactory;
+import umleditor.application.factory.NodeFactory;
 import umleditor.domain.DiagramDocument;
 import umleditor.enumtype.ToolMode;
 

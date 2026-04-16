@@ -6,9 +6,7 @@ import umleditor.application.service.PointerTargetingService;
 import umleditor.application.service.ResizeService;
 import umleditor.application.service.ElementTransformService;
 import umleditor.application.service.SelectInteractionStateService;
-import umleditor.domain.link.Link;
 import umleditor.domain.model.Port;
-import umleditor.domain.node.Node;
 
 import java.awt.*;
 
@@ -47,7 +45,7 @@ public class SelectTool implements Tool {
             Port pressedPort = portHit.port();
             selectionStateService.selectSingle(owner);
 
-            if (owner instanceof Node) {
+            if (pointerTargetingService.isNodeElement(owner)) {
                 interactionStateService.beginResize(owner, resizeService.beginSession(owner, pressedPort));
             }
             return;
@@ -56,7 +54,7 @@ public class SelectTool implements Tool {
         DiagramElement hit = pointerTargetingService.findTopElementAt(p);
         if (hit != null) {
             selectionStateService.selectSingle(hit);
-            if (!(hit instanceof Link)) {
+            if (!pointerTargetingService.isLinkElement(hit)) {
                 interactionStateService.beginMove(hit, p);
             }
             return;
