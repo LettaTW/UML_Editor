@@ -86,18 +86,18 @@ public class DiagramDocument {
         }
     }
 
-    public boolean removeElement(DiagramElement element) {
+    public void removeElement(DiagramElement element) {
         Link link = asLink(element);
         if (link != null) {
-            return removeLink(link);
+            removeLink(link);
+            return;
         }
 
         Block block = asBlock(element);
         if (block != null) {
-            return removeBlock(block);
+            removeBlock(block);
         }
 
-        return false;
     }
 
     public List<DiagramElement> getElements() {

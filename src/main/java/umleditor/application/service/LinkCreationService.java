@@ -15,22 +15,21 @@ public class LinkCreationService {
         this.linkFactory = linkFactory;
     }
 
-    public boolean createLink(ToolMode mode, Port sourcePort, Port targetPort) {
+    public void createLink(ToolMode mode, Port sourcePort, Port targetPort) {
         if (sourcePort == null || targetPort == null) {
-            return false;
+            return;
         }
 
         if (sourcePort.getOwnerId().equals(targetPort.getOwnerId())) {
-            return false;
+            return;
         }
 
         Link link = linkFactory.createLink(mode, sourcePort, targetPort);
         if (link == null) {
-            return false;
+            return;
         }
 
         document.addLink(link);
-        return true;
     }
 }
 

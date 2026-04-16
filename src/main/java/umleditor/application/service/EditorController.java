@@ -55,7 +55,7 @@ public class EditorController {
         PointerTargetingService pointerTargetingService = new PointerTargetingService(document);
         ResizeService resizeService = new ResizeService();
         ElementTransformService elementTransformService = new TransformService(document);
-        ToolFactory toolFactory = new ToolFactory(
+        return new ToolFactory(
                 document,
                 nodeFactory,
                 linkCreationService,
@@ -65,7 +65,6 @@ public class EditorController {
                 elementTransformService,
                 interactionStateService
         );
-        return toolFactory;
     }
 
     public void setCurrentTool(ToolMode mode) {
@@ -141,12 +140,12 @@ public class EditorController {
         return document.getElementsForRender();
     }
 
-    public boolean groupSelected() {
-        return groupService.groupSelected();
+    public void groupSelected() {
+        groupService.groupSelected();
     }
 
-    public boolean ungroupSelected() {
-        return groupService.ungroupSelected();
+    public void ungroupSelected() {
+        groupService.ungroupSelected();
     }
 
     public boolean canGroupSelected() {
@@ -173,8 +172,8 @@ public class EditorController {
         return new LabelEditState(element.getLabelText(), element.getFillColor());
     }
 
-    public boolean updateSelectedBasicNodeLabel(String text, Color fillColor) {
-        return labelService.updateSelectedLabel(text, fillColor);
+    public void updateSelectedBasicNodeLabel(String text, Color fillColor) {
+        labelService.updateSelectedLabel(text, fillColor);
     }
 
     public void drawToolOverlay(Graphics2D g2) {
