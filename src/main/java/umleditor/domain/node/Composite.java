@@ -1,6 +1,6 @@
 package umleditor.domain.node;
 
-import umleditor.domain.BaseElement;
+import umleditor.config.EditorDefaults;
 import umleditor.domain.DiagramElement;
 
 import java.awt.BasicStroke;
@@ -10,25 +10,28 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Stroke;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class Composite extends BaseElement {
-    private final List<DiagramElement> children = new ArrayList<>();
+import static umleditor.config.EditorDefaults.clampDepth;
+
+public class Composite extends Block {
+    private final List<Block> children = new ArrayList<>();
+    private final Map<String, Integer> relativeDepthById = new HashMap<>();
 
     public Composite(List<DiagramElement> elements) {
         if (elements != null) {
             for (DiagramElement element : elements) {
-                if (element != null) {
-                    element.setSelected(false);
-                    element.setHovered(false);
-                    children.add(element);
-                }
+                addElementToChildren(element);
             }
         }
+        rebuildRelativeDepth();
     }
 
-    public List<DiagramElement> getChildren() {
+    public List<Block> getChildren() {
         return Collections.unmodifiableList(children);
     }
 
@@ -36,15 +39,31 @@ public class Composite extends BaseElement {
         return new ArrayList<>(children);
     }
 
-    public List<String> getContainedNodeIds() {
+    public List<DiagramElement> releaseChildrenWithAbsoluteDepth(int compositeDepth) {
+        List<Block> ordered = new ArrayList<>(children);
+        ordered.sort(Comparator.comparingInt(this::relativeDepthOf));
+
+        List<DiagramElement> released = new ArrayList<>(ordered.size());
+        for (Block child : ordered) {
+            int absoluteDepth = clampDepth(compositeDepth + relativeDepthOf(child));
+            child.setDepth(absoluteDepth);
+            released.add(child);
+        }
+        return released;
+    }
+
+    @Override
+    public List<String> collectOwnedNodeIds() {
         List<String> ids = new ArrayList<>();
-        collectNodeIds(children, ids);
+        for (Block child : children) {
+            ids.addAll(child.collectOwnedNodeIds());
+        }
         return ids;
     }
 
     @Override
     public void moveBy(int dx, int dy) {
-        for (DiagramElement child : children) {
+        for (Block child : children) {
             child.moveBy(dx, dy);
         }
     }
@@ -60,7 +79,7 @@ public class Composite extends BaseElement {
         int maxX = Integer.MIN_VALUE;
         int maxY = Integer.MIN_VALUE;
 
-        for (DiagramElement child : children) {
+        for (Block child : children) {
             Rectangle bounds = child.getBounds();
             minX = Math.min(minX, bounds.x);
             minY = Math.min(minY, bounds.y);
@@ -78,7 +97,10 @@ public class Composite extends BaseElement {
 
     @Override
     public void draw(Graphics2D g2) {
-        for (DiagramElement child : children) {
+        List<Block> ordered = new ArrayList<>(children);
+        // Draw from back to front based on normalized relative depth.
+        ordered.sort(Comparator.comparingInt(this::relativeDepthOf).reversed());
+        for (Block child : ordered) {
             child.draw(g2);
         }
 
@@ -92,23 +114,48 @@ public class Composite extends BaseElement {
         }
 
         Stroke oldStroke = g2.getStroke();
-        g2.setColor(Color.DARK_GRAY);
+        g2.setColor(isSelected()
+                ? EditorDefaults.NODE_SELECTED_OUTLINE_COLOR
+                : EditorDefaults.NODE_HOVER_OUTLINE_COLOR);
         g2.setStroke(new BasicStroke(1.6f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{6f, 4f}, 0));
         g2.drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
         g2.setStroke(oldStroke);
     }
 
-    private void collectNodeIds(List<DiagramElement> elements, List<String> out) {
-        for (DiagramElement element : elements) {
-            if (element instanceof Node) {
-                out.add(element.getID());
-                continue;
-            }
-
-            if (element instanceof Composite composite) {
-                collectNodeIds(composite.getChildren(), out);
-            }
+    private void addElementToChildren(DiagramElement element) {
+        if (!(element instanceof Block block)) {
+            return;
         }
+
+        addBlockToChildren(block);
+    }
+
+    private void addBlockToChildren(Block block) {
+
+        addDetachedChild(block);
+    }
+
+    private void addDetachedChild(Block child) {
+        child.setSelected(false);
+        child.setHovered(false);
+        children.add(child);
+    }
+
+    private void rebuildRelativeDepth() {
+        relativeDepthById.clear();
+        List<Block> ordered = new ArrayList<>(children);
+        ordered.sort(Comparator.comparingInt(Block::getDepth));
+        for (int i = 0; i < ordered.size(); i++) {
+            relativeDepthById.put(ordered.get(i).getID(), i);
+        }
+    }
+
+    private int relativeDepthOf(Block block) {
+        Integer depth = relativeDepthById.get(block.getID());
+        if (depth == null) {
+            return Integer.MAX_VALUE;
+        }
+        return depth;
     }
 }
 

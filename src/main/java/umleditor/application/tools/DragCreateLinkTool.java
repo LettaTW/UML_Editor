@@ -1,8 +1,7 @@
 package umleditor.application.tools;
 
+import umleditor.application.service.LinkCreationService;
 import umleditor.application.service.PointerTargetingService;
-import umleditor.domain.DiagramDocument;
-import umleditor.domain.link.Link;
 import umleditor.domain.model.Port;
 import umleditor.enumtype.ToolMode;
 
@@ -11,16 +10,20 @@ import java.awt.*;
 import static umleditor.config.EditorDefaults.LINK_PORT_REVEAL_PROXIMITY_PX;
 
 public class DragCreateLinkTool implements Tool {
-    private final DiagramDocument document;
     private final ToolMode mode;
+    private final LinkCreationService linkCreationService;
     private final PointerTargetingService pointerTargetingService;
 
     private Port sourcePort;
     private Point currentPoint;
 
-    public DragCreateLinkTool(DiagramDocument document, ToolMode mode, PointerTargetingService pointerTargetingService) {
-        this.document = document;
+    public DragCreateLinkTool(
+            ToolMode mode,
+            LinkCreationService linkCreationService,
+            PointerTargetingService pointerTargetingService
+    ) {
         this.mode = mode;
+        this.linkCreationService = linkCreationService;
         this.pointerTargetingService = pointerTargetingService;
     }
 
@@ -53,12 +56,7 @@ public class DragCreateLinkTool implements Tool {
         }
 
         Port targetPort = pointerTargetingService.findTopPortAt(p);
-        if (targetPort != null && !targetPort.getOwnerId().equals(sourcePort.getOwnerId())) {
-            Link link = mode.createLink(sourcePort, targetPort);
-            if (link != null) {
-                document.addElement(link);
-            }
-        }
+        linkCreationService.createLink(mode, sourcePort, targetPort);
 
         sourcePort = null;
         currentPoint = null;

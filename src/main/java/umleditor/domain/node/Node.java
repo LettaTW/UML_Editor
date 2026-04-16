@@ -1,7 +1,6 @@
 package umleditor.domain.node;
 
 import umleditor.config.EditorDefaults;
-import umleditor.domain.BaseElement;
 import umleditor.domain.model.Port;
 
 import java.awt.*;
@@ -9,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
 
-public abstract class Node extends BaseElement {
+public abstract class Node extends Block {
     // Define the Node's Bounds
     protected int x;
     protected int y;
@@ -64,6 +63,18 @@ public abstract class Node extends BaseElement {
         return null;
     }
 
+    @Override
+    public List<String> collectOwnedNodeIds() {
+        return Collections.singletonList(getID());
+    }
+
+    public void resizeTo(Rectangle bounds) {
+        if (bounds == null) {
+            return;
+        }
+        setBounds(bounds.x, bounds.y, bounds.width, bounds.height);
+    }
+
 
     public int getX() { return x; }
     public int getY() { return y; }
@@ -104,11 +115,39 @@ public abstract class Node extends BaseElement {
             return;
         }
 
-        g2.setColor(Color.BLACK);
+        g2.setColor(isSelected()
+                ? EditorDefaults.NODE_SELECTED_PORT_COLOR
+                : EditorDefaults.NODE_HOVER_PORT_COLOR);
         for (Port port : ports) {
             Rectangle b = port.getBounds();
             g2.fillRect(b.x, b.y, b.width, b.height);
         }
+    }
+
+    protected void drawRectInteractionOutline(Graphics2D g2, Rectangle r) {
+        if (!isSelected() && !isHovered()) {
+            return;
+        }
+
+        Color oldColor = g2.getColor();
+        g2.setColor(isSelected()
+                ? EditorDefaults.NODE_SELECTED_OUTLINE_COLOR
+                : EditorDefaults.NODE_HOVER_OUTLINE_COLOR);
+        g2.drawRect(r.x - 2, r.y - 2, r.width + 4, r.height + 4);
+        g2.setColor(oldColor);
+    }
+
+    protected void drawOvalInteractionOutline(Graphics2D g2, Rectangle r) {
+        if (!isSelected() && !isHovered()) {
+            return;
+        }
+
+        Color oldColor = g2.getColor();
+        g2.setColor(isSelected()
+                ? EditorDefaults.NODE_SELECTED_OUTLINE_COLOR
+                : EditorDefaults.NODE_HOVER_OUTLINE_COLOR);
+        g2.drawOval(r.x - 2, r.y - 2, r.width + 4, r.height + 4);
+        g2.setColor(oldColor);
     }
 
     public abstract void draw(Graphics2D g2);

@@ -10,11 +10,9 @@ import java.awt.event.MouseEvent;
 
 public class EditorCanvas extends JPanel {
     private final EditorController controller;
-    private Runnable interactionChangedCallback;
 
-    public EditorCanvas(EditorController controller, Runnable interactionChangedCallback) {
+    public EditorCanvas(EditorController controller) {
         this.controller = controller;
-        this.interactionChangedCallback = interactionChangedCallback;
 
         setBackground(Color.WHITE);
 
@@ -22,28 +20,24 @@ public class EditorCanvas extends JPanel {
             @Override
             public void mousePressed(MouseEvent e) {
                 controller.onMousePressed(e.getX(), e.getY(), e.getButton());
-                notifyInteractionChanged();
                 repaint();
             }
 
             @Override
             public void mouseDragged(MouseEvent e) {
                 controller.onMouseDragged(e.getX(), e.getY());
-                notifyInteractionChanged();
                 repaint();
             }
 
             @Override
             public void mouseMoved(MouseEvent e) {
                 controller.onMouseMoved(e.getX(), e.getY());
-                notifyInteractionChanged();
                 repaint();
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
                 controller.onMouseReleased(e.getX(), e.getY());
-                notifyInteractionChanged();
                 repaint();
             }
         };
@@ -52,15 +46,6 @@ public class EditorCanvas extends JPanel {
         addMouseMotionListener(adapter);
     }
 
-    public void setInteractionChangedCallback(Runnable interactionChangedCallback) {
-        this.interactionChangedCallback = interactionChangedCallback;
-    }
-
-    private void notifyInteractionChanged() {
-        if (interactionChangedCallback != null) {
-            interactionChangedCallback.run();
-        }
-    }
 
     @Override
     protected void paintComponent(Graphics g) {

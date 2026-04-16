@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 public final class EditorDefaults {
@@ -27,6 +29,21 @@ public final class EditorDefaults {
     public static final int DEFAULT_LABEL_FONT_SIZE = getInt("label.defaultFontSize", 14);
     public static final int DEFAULT_LABEL_PADDING = getInt("label.defaultPadding", 4);
     public static final String DEFAULT_LABEL_TEXT = getString("label.defaultText", "New Label");
+    public static final String[] LABEL_PRESET_NAMES = getStringList(
+            "label.presetNames",
+            new String[]{"Pale Yellow", "Pale Blue", "Pale Green", "Pale Pink", "Light Gray", "White"}
+    );
+    public static final Color[] LABEL_PRESET_COLORS = getColorList(
+            "label.presetColors",
+            new Color[]{
+                    new Color(255, 249, 196),
+                    new Color(205, 229, 255),
+                    new Color(220, 245, 220),
+                    new Color(248, 214, 220),
+                    new Color(224, 224, 224),
+                    Color.WHITE
+            }
+    );
 
     public static final String DEFAULT_RECT_LABEL_TEXT = getString("rect.defaultLabel", "Class");
     public static final String DEFAULT_OVAL_LABEL_TEXT = getString("oval.defaultLabel", "Use Case");
@@ -37,6 +54,15 @@ public final class EditorDefaults {
     public static final int TOOLBAR_BUTTON_HEIGHT = getInt("toolbar.buttonHeight", 44);
     public static final int TOOLBAR_BUTTON_FONT_SIZE = getInt("toolbar.buttonFontSize", 13);
     public static final int LINK_PORT_REVEAL_PROXIMITY_PX = getInt("link.portRevealProximityPx", 16);
+
+    public static final Color NODE_HOVER_OUTLINE_COLOR =
+            getColor("node.hoverOutlineColor", new Color(120, 120, 120));
+    public static final Color NODE_SELECTED_OUTLINE_COLOR =
+            getColor("node.selectedOutlineColor", Color.BLACK);
+    public static final Color NODE_HOVER_PORT_COLOR =
+            getColor("node.hoverPortColor", new Color(130, 130, 130));
+    public static final Color NODE_SELECTED_PORT_COLOR =
+            getColor("node.selectedPortColor", Color.BLACK);
 
     public static final Color DEFAULT_SELECTION_BOX_STROKE_COLOR =
             getColor("selection.boxStrokeColor", new Color(50, 90, 180));
@@ -91,19 +117,69 @@ public final class EditorDefaults {
         return value == null ? fallback : value;
     }
 
+    private static String[] getStringList(String key, String[] fallback) {
+        String raw = PROPS.getProperty(key);
+        if (raw == null) {
+            return fallback;
+        }
+
+        String[] parts = raw.split(",");
+        List<String> values = new ArrayList<>();
+        for (String part : parts) {
+            String text = part.trim();
+            if (!text.isEmpty()) {
+                values.add(text);
+            }
+        }
+        if (values.isEmpty()) {
+            return fallback;
+        }
+        return values.toArray(new String[0]);
+    }
+
+    private static Color[] getColorList(String key, Color[] fallback) {
+        String raw = PROPS.getProperty(key);
+        if (raw == null) {
+            return fallback;
+        }
+
+        String[] parts = raw.split(",");
+        List<Color> values = new ArrayList<>();
+        for (String part : parts) {
+            Color parsed = parseColor(part.trim());
+            if (parsed == null) {
+                return fallback;
+            }
+            values.add(parsed);
+        }
+
+        if (values.isEmpty()) {
+            return fallback;
+        }
+        return values.toArray(new Color[0]);
+    }
+
     private static Color getColor(String key, Color fallback) {
         String raw = PROPS.getProperty(key);
         if (raw == null) {
             return fallback;
         }
 
-        String text = raw.trim();
+        Color parsed = parseColor(raw.trim());
+        return parsed == null ? fallback : parsed;
+    }
+
+    private static Color parseColor(String text) {
+        if (text == null) {
+            return null;
+        }
+
         if (text.startsWith("#")) {
             text = text.substring(1);
         }
 
         if (text.length() != 6) {
-            return fallback;
+            return null;
         }
 
         try {
@@ -113,7 +189,7 @@ public final class EditorDefaults {
             int b = rgb & 0xFF;
             return new Color(r, g, b);
         } catch (NumberFormatException ignored) {
-            return fallback;
+            return null;
         }
     }
 

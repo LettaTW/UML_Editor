@@ -1,8 +1,6 @@
 package umleditor.domain.model;
 
-import java.awt.*;
+import umleditor.domain.capability.HitTestable;
 
-public interface Handle {
-    Rectangle getBounds();
-    boolean contains(Point p);
+public interface Handle extends HitTestable {
 }

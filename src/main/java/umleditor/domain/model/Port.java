@@ -1,7 +1,5 @@
 package umleditor.domain.model;
 
-import umleditor.domain.node.Node;
-
 import static umleditor.config.EditorDefaults.PORT_SIZE;
 
 import java.awt.*;
