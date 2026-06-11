@@ -33,10 +33,6 @@ public class TransformService implements ElementTransformService {
         for (BaseElement element : elements) {
             element.moveBy(dx, dy);
             model.notifyElementUpdated(element);
-
-            for (String movedNodeId : element.collectOwnedNodeIds()) {
-                notifyLinkNodeMoved(movedNodeId, dx, dy);
-            }
         }
     }
     @Override
@@ -48,16 +44,6 @@ public class TransformService implements ElementTransformService {
         element.resizeTo(bounds);
         model.notifyElementUpdated(element);
 
-        String reshapedNodeId = element.getID();
-        List<Port> ports = element.getPorts();
-        for (BaseElement e : model.getElements()) {
-            e.onNodeReshaped(reshapedNodeId, ports);
-        }
     }
 
-    private void notifyLinkNodeMoved(String movedNodeId, int dx, int dy) {
-        for (BaseElement e : model.getElements()) {
-            e.onNodeMoved(movedNodeId, dx, dy);
-        }
-    }
 }

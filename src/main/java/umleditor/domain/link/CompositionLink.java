@@ -17,8 +17,8 @@ public class CompositionLink extends Link {
         double angle = getLineAngle();
         int size = 12;
 
-        int tipX = targetPoint.x;
-        int tipY = targetPoint.y;
+        int tipX = targetPort.getX();
+        int tipY = targetPort.getY();
 
         int nearX = (int) Math.round(tipX - size * Math.cos(angle));
         int nearY = (int) Math.round(tipY - size * Math.sin(angle));

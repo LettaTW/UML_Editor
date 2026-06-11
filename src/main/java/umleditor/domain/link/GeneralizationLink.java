@@ -17,8 +17,8 @@ public class GeneralizationLink extends Link {
         double angle = getLineAngle();
         int size = 14;
 
-        int tipX = targetPoint.x;
-        int tipY = targetPoint.y;
+        int tipX = targetPort.getX();
+        int tipY = targetPort.getY();
 
         int baseX = (int) Math.round(tipX - size * Math.cos(angle));
         int baseY = (int) Math.round(tipY - size * Math.sin(angle));

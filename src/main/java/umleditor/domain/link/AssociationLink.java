@@ -16,8 +16,8 @@ public class AssociationLink extends Link {
         double angle = getLineAngle();
         int size = 12;
 
-        int tipX = targetPoint.x;
-        int tipY = targetPoint.y;
+        int tipX = targetPort.getX();
+        int tipY = targetPort.getY();
 
         int leftX = (int) Math.round(tipX - size * Math.cos(angle - Math.PI / 6));
         int leftY = (int) Math.round(tipY - size * Math.sin(angle - Math.PI / 6));
