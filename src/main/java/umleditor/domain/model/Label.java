@@ -5,8 +5,8 @@ import umleditor.config.EditorDefaults;
 import java.awt.*;
 
 public class Label {
-    private String text = EditorDefaults.DEFAULT_LABEL_TEXT;
-    private Color fillColor = Color.WHITE;
+    private String text;
+    private Color fillColor;
 
     public Label(String text, Color fillColor) {
         this.text = text;

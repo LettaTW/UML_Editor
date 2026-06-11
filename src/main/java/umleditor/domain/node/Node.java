@@ -3,11 +3,13 @@ package umleditor.domain.node;
 import umleditor.config.EditorDefaults;
 import umleditor.domain.model.Label;
 import umleditor.domain.model.Port;
+import umleditor.domain.model.PortDirection;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Collections;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 
 public abstract class Node extends Block {
     // Define the Node's Bounds
@@ -17,13 +19,14 @@ public abstract class Node extends Block {
     protected int height;
     protected Label label;
 
-    protected final List<Port> ports = new ArrayList<>();
+    protected final Map<PortDirection, Port> ports = new EnumMap<>(PortDirection.class);
     protected Node(int x, int y, int width, int height) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.label = new Label(EditorDefaults.DEFAULT_LABEL_TEXT, Color.WHITE);
+        initPorts();
         updatePorts();
     }
 
@@ -52,11 +55,11 @@ public abstract class Node extends Block {
     }
 
     public List<Port> getPorts() {
-        return Collections.unmodifiableList(ports);
+        return List.copyOf(ports.values());
     }
 
     public Port findPortAt(Point p) {
-        for (Port port : ports) {
+        for (Port port : ports.values()) {
             if (port.contains(p)) {
                 return port;
             }
@@ -103,7 +106,7 @@ public abstract class Node extends Block {
         }
 
         Color portColor = isSelected() ? EditorDefaults.NODE_SELECTED_PORT_COLOR : EditorDefaults.NODE_HOVER_PORT_COLOR;
-        for (Port port : ports) {
+        for (Port port : ports.values()) {
             port.draw(g2, portColor);
         }
     }
@@ -122,8 +125,8 @@ public abstract class Node extends Block {
         g2.setColor(oldColor);
     }
 
-    public abstract void drawOutlineShape(Graphics2D g2, Rectangle r);
-
+    protected abstract void drawOutlineShape(Graphics2D g2, Rectangle r);
+    protected abstract void initPorts();
     public abstract void draw(Graphics2D g2);
 
     // update port's position

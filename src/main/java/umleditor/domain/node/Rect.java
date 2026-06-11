@@ -1,6 +1,7 @@
 package umleditor.domain.node;
 
 import umleditor.domain.model.Port;
+import umleditor.domain.model.PortDirection;
 
 import java.awt.*;
 
@@ -20,8 +21,20 @@ public class Rect extends Node {
     }
 
     @Override
-    public void drawOutlineShape(Graphics2D g2, Rectangle r) {
+    protected void drawOutlineShape(Graphics2D g2, Rectangle r) {
         g2.drawRect(r.x - 2, r.y - 2, r.width + 4, r.height + 4);
+    }
+
+    @Override
+    protected void initPorts() {
+        ports.put(PortDirection.NORTH_WEST, new Port(getID(), 0, 0));
+        ports.put(PortDirection.NORTH,      new Port(getID(), 0, 0));
+        ports.put(PortDirection.NORTH_EAST, new Port(getID(), 0, 0));
+        ports.put(PortDirection.EAST,       new Port(getID(), 0, 0));
+        ports.put(PortDirection.SOUTH_EAST, new Port(getID(), 0, 0));
+        ports.put(PortDirection.SOUTH,      new Port(getID(), 0, 0));
+        ports.put(PortDirection.SOUTH_WEST, new Port(getID(), 0, 0));
+        ports.put(PortDirection.WEST,       new Port(getID(), 0, 0));
     }
 
     @Override
@@ -38,8 +51,6 @@ public class Rect extends Node {
 
     @Override
     public void updatePorts() {
-        ports.clear();
-
         int left = x;
         int right = x + width;
         int top = y;
@@ -47,13 +58,13 @@ public class Rect extends Node {
         int middleX = x + (width / 2);
         int middleY = y + (height / 2);
 
-        ports.add(new Port(getID(), left, top));
-        ports.add(new Port(getID(), middleX, top));
-        ports.add(new Port(getID(), right, top));
-        ports.add(new Port(getID(), right, middleY));
-        ports.add(new Port(getID(), right, bottom));
-        ports.add(new Port(getID(), middleX, bottom));
-        ports.add(new Port(getID(), left, bottom));
-        ports.add(new Port(getID(), left, middleY));
+        ports.get(PortDirection.NORTH_WEST).setPosition(left, top);
+        ports.get(PortDirection.NORTH).setPosition(middleX, top);
+        ports.get(PortDirection.NORTH_EAST).setPosition(right, top);
+        ports.get(PortDirection.EAST).setPosition(right, middleY);
+        ports.get(PortDirection.SOUTH_EAST).setPosition(right, bottom);
+        ports.get(PortDirection.SOUTH).setPosition(middleX, bottom);
+        ports.get(PortDirection.SOUTH_WEST).setPosition(left, bottom);
+        ports.get(PortDirection.WEST).setPosition(left, middleY);
     }
 }
