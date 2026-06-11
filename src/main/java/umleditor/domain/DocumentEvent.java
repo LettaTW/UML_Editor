@@ -2,7 +2,7 @@ package umleditor.domain;
 
 import umleditor.enumtype.ToolMode;
 
-public record DocumentEvent(Type type, DiagramElement element, ToolMode toolMode) {
+public record DocumentEvent(Type type, BaseElement element, ToolMode toolMode) {
     public enum Type {
         ELEMENT_ADDED,
         ELEMENT_REMOVED,
@@ -12,15 +12,15 @@ public record DocumentEvent(Type type, DiagramElement element, ToolMode toolMode
         TOOL_CHANGED
     }
 
-    public static DocumentEvent elementAdded(DiagramElement element) {
+    public static DocumentEvent elementAdded(BaseElement element) {
         return new DocumentEvent(Type.ELEMENT_ADDED, element, null);
     }
 
-    public static DocumentEvent elementRemoved(DiagramElement element) {
+    public static DocumentEvent elementRemoved(BaseElement element) {
         return new DocumentEvent(Type.ELEMENT_REMOVED, element, null);
     }
 
-    public static DocumentEvent elementUpdated(DiagramElement element) {
+    public static DocumentEvent elementUpdated(BaseElement element) {
         return new DocumentEvent(Type.ELEMENT_UPDATED, element, null);
     }
 

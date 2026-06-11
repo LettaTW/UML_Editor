@@ -1,6 +1,7 @@
 package umleditor.domain.node;
 
 import umleditor.config.EditorDefaults;
+import umleditor.domain.BaseElement;
 import umleditor.domain.model.Label;
 import umleditor.domain.model.Port;
 import umleditor.domain.model.PortDirection;
@@ -11,7 +12,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class Node extends Block {
+public abstract class Node extends BaseElement {
     // Define the Node's Bounds
     protected int x;
     protected int y;
@@ -29,6 +30,7 @@ public abstract class Node extends Block {
         initPorts();
         updatePorts();
     }
+
 
     @Override
     public void moveBy(int dx, int dy) {

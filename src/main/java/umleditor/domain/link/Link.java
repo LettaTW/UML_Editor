@@ -29,6 +29,19 @@ public abstract class Link extends BaseElement implements NodeTransformReactable
     }
 
     @Override
+    public int getRenderPriority() {
+        return 2;
+    }
+    @Override
+    public boolean isDraggable() { return false; }
+
+    @Override
+    public boolean isGroupable() {
+        return false;
+    }
+
+
+    @Override
     public void onNodeMoved(String nodeId, int dx, int dy) {
         if (sourceOwnerId.equals(nodeId)) {
             sourcePoint.translate(dx, dy);

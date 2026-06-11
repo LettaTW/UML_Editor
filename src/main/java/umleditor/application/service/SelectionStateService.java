@@ -1,7 +1,7 @@
 package umleditor.application.service;
 
 import umleditor.domain.DiagramDocument;
-import umleditor.domain.DiagramElement;
+import umleditor.domain.BaseElement;
 
 import java.awt.Rectangle;
 import java.util.List;
@@ -13,18 +13,18 @@ public class SelectionStateService {
         this.document = document;
     }
 
-    public void selectSingle(DiagramElement target) {
+    public void selectSingle(BaseElement target) {
         if (target == null) {
             clearSelection();
             return;
         }
 
         boolean alreadySelected = target.isSelected();
-        for (DiagramElement element : document.getElements()) {
+        for (BaseElement element : document.getElements()) {
             element.setSelected(element == target);
         }
 
-        if (document.isCompositeElement(target)) {
+        if (target.isComposite()) {
             // Composite should be raised on every click, while keeping grouped internals isolated.
             document.bringToFrontIsolated(target);
         } else if (!alreadySelected) {
@@ -35,7 +35,7 @@ public class SelectionStateService {
     }
 
     public void clearSelection() {
-        for (DiagramElement element : document.getElements()) {
+        for (BaseElement element : document.getElements()) {
             element.setSelected(false);
         }
         document.notifySelectionChanged();
@@ -43,10 +43,10 @@ public class SelectionStateService {
 
     public void selectByBox(Rectangle box) {
         boolean anySelected = false;
-        List<DiagramElement> elements = document.getElements();
+        List<BaseElement> elements = document.getElements();
 
-        for (DiagramElement element : elements) {
-            boolean selected = !document.isLinkElement(element) && box.contains(element.getBounds());
+        for (BaseElement element : elements) {
+            boolean selected = box.contains(element.getBounds());
             element.setSelected(selected);
             if (selected) {
                 anySelected = true;

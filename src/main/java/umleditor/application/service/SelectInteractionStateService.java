@@ -1,23 +1,27 @@
 package umleditor.application.service;
 
-import umleditor.domain.DiagramElement;
+import umleditor.domain.BaseElement;
 
 import java.awt.Point;
+import java.util.List;
 
 public class SelectInteractionStateService {
     private Point dragStart;
     private Point dragCurrent;
     private Point lastDragPoint;
     private ResizeService.ResizeSession resizeSession;
-    private DiagramElement movingElement;
-    private DiagramElement resizingElement;
+
+    // Changed from single BaseElement to List<BaseElement>
+    private List<BaseElement> movingElements;
+    private BaseElement resizingElement;
+
     private boolean marqueeActive;
     private boolean marqueeClearedSelection;
 
     public void beginPointerDown(Point p) {
         dragStart = p;
         dragCurrent = p;
-        movingElement = null;
+        movingElements = null;
         resizingElement = null;
         lastDragPoint = null;
         resizeSession = null;
@@ -25,17 +29,18 @@ public class SelectInteractionStateService {
         marqueeClearedSelection = false;
     }
 
-    public void beginResize(DiagramElement owner, ResizeService.ResizeSession session) {
+    public void beginResize(BaseElement owner, ResizeService.ResizeSession session) {
         resizingElement = owner;
         resizeSession = session;
-        movingElement = null;
+        movingElements = null;
         lastDragPoint = null;
         marqueeActive = false;
         marqueeClearedSelection = false;
     }
 
-    public void beginMove(DiagramElement target, Point startPoint) {
-        movingElement = target;
+    // Now accepts a List of target elements
+    public void beginMove(List<BaseElement> targets, Point startPoint) {
+        movingElements = targets;
         lastDragPoint = startPoint;
         resizingElement = null;
         resizeSession = null;
@@ -46,7 +51,7 @@ public class SelectInteractionStateService {
     public void beginMarquee() {
         marqueeActive = true;
         marqueeClearedSelection = false;
-        movingElement = null;
+        movingElements = null;
         resizingElement = null;
         lastDragPoint = null;
         resizeSession = null;
@@ -57,14 +62,15 @@ public class SelectInteractionStateService {
     }
 
     public boolean isMoving() {
-        return movingElement != null && lastDragPoint != null;
+        // Check if list is not null and not empty
+        return movingElements != null && !movingElements.isEmpty() && lastDragPoint != null;
     }
 
     public boolean isMarqueeActive() {
         return marqueeActive;
     }
 
-    public DiagramElement getResizingElement() {
+    public BaseElement getResizingElement() {
         return resizingElement;
     }
 
@@ -72,8 +78,9 @@ public class SelectInteractionStateService {
         return resizeSession;
     }
 
-    public DiagramElement getMovingElement() {
-        return movingElement;
+    // Return the list of moving elements
+    public List<BaseElement> getMovingElements() {
+        return movingElements;
     }
 
     public Point getLastDragPoint() {
@@ -107,7 +114,7 @@ public class SelectInteractionStateService {
     public void clearInteraction() {
         dragStart = null;
         dragCurrent = null;
-        movingElement = null;
+        movingElements = null;
         resizingElement = null;
         lastDragPoint = null;
         resizeSession = null;
@@ -115,4 +122,3 @@ public class SelectInteractionStateService {
         marqueeClearedSelection = false;
     }
 }
-

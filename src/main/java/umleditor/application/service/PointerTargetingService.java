@@ -1,18 +1,15 @@
 package umleditor.application.service;
 
 import umleditor.domain.DiagramDocument;
-import umleditor.domain.DiagramElement;
-import umleditor.domain.link.Link;
+import umleditor.domain.BaseElement;
 import umleditor.domain.model.Port;
-import umleditor.domain.node.Block;
-import umleditor.domain.node.Node;
 
 import java.awt.*;
 
 import static umleditor.config.EditorDefaults.MAX_DEPTH;
 
 public class PointerTargetingService {
-    public record PortHit(DiagramElement owner, Port port) {
+    public record PortHit(BaseElement owner, Port port) {
     }
 
     private final DiagramDocument document;
@@ -21,7 +18,7 @@ public class PointerTargetingService {
         this.document = document;
     }
 
-    public DiagramElement findTopElementAt(Point p) {
+    public BaseElement findTopElementAt(Point p) {
         return document.findTopElementAt(p);
     }
 
@@ -30,33 +27,22 @@ public class PointerTargetingService {
         return hit == null ? null : hit.port();
     }
 
-    public boolean isNodeElement(DiagramElement element) {
-        return document.isNodeElement(element);
-    }
-
-    public boolean isLinkElement(DiagramElement element) {
-        return document.isLinkElement(element);
-    }
-
     public PortHit findTopPortHitAt(Point p) {
-        DiagramElement topOwner = null;
+        BaseElement topOwner = null;
         Port topPort = null;
         int topDepth = MAX_DEPTH + 1;
 
-        for (Block block : document.getBlocks()) {
-            Node node = document.asNode(block);
-            if (node == null) {
-                continue;
-            }
 
-            Port candidate = node.findPortAt(p);
+        for (BaseElement element : document.getElements()) {
+            // findPortAt(p) if is not Node (like Link, Composite) default return null
+            Port candidate = element.findPortAt(p);
             if (candidate == null) {
                 continue;
             }
 
-            int depth = node.getDepth();
+            int depth = element.getDepth();
             if (topPort == null || depth <= topDepth) {
-                topOwner = node;
+                topOwner = element;
                 topPort = candidate;
                 topDepth = depth;
             }
@@ -81,25 +67,24 @@ public class PointerTargetingService {
         applyHoverState(null);
     }
 
-    private DiagramElement findTopNodeNear(Point p, int proximityPx) {
-        DiagramElement topNode = null;
+    private BaseElement findTopNodeNear(Point p, int proximityPx) {
+        BaseElement topNode = null;
         int topDepth = MAX_DEPTH + 1;
 
-        for (Block block : document.getBlocks()) {
-            Node node = document.asNode(block);
-            if (node == null) {
+        for (BaseElement element : document.getElements()) {
+            if (element.getPorts().isEmpty()) {
                 continue;
             }
 
-            Rectangle nearArea = node.getBounds();
+            Rectangle nearArea = element.getBounds();
             nearArea.grow(proximityPx, proximityPx);
             if (!nearArea.contains(p)) {
                 continue;
             }
 
-            int depth = node.getDepth();
+            int depth = element.getDepth();
             if (topNode == null || depth <= topDepth) {
-                topNode = node;
+                topNode = element;
                 topDepth = depth;
             }
         }
@@ -107,16 +92,12 @@ public class PointerTargetingService {
         return topNode;
     }
 
-    private void applyHoverState(DiagramElement hoverTarget) {
-        for (Block block : document.getBlocks()) {
-            block.setHovered(block == hoverTarget);
-        }
+    private void applyHoverState(BaseElement hoverTarget) {
 
-        for (Link link : document.getLinks()) {
-            link.setHovered(link == hoverTarget);
+        for (BaseElement element : document.getElements()) {
+            element.setHovered(element == hoverTarget);
         }
 
         document.notifyHoverChanged();
     }
 }
-

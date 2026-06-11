@@ -6,7 +6,7 @@ import umleditor.application.service.*;
 import umleditor.application.tools.Tool;
 import umleditor.application.factory.ToolFactory;
 import umleditor.application.tools.ToolManager;
-import umleditor.domain.DiagramElement;
+import umleditor.domain.BaseElement;
 import umleditor.domain.DiagramDocument;
 import umleditor.domain.DocumentObserver;
 import umleditor.domain.node.Node;
@@ -56,6 +56,7 @@ public class EditorController {
         PointerTargetingService pointerTargetingService = new PointerTargetingService(document);
         ResizeService resizeService = new ResizeService();
         ElementTransformService elementTransformService = new TransformService(document);
+        SelectionQueryService selectionQueryService = new SelectionQueryService(document);
         return new ToolFactory(
                 document,
                 nodeFactory,
@@ -64,7 +65,8 @@ public class EditorController {
                 pointerTargetingService,
                 resizeService,
                 elementTransformService,
-                interactionStateService
+                interactionStateService,
+                selectionQueryService
         );
     }
 
@@ -133,11 +135,11 @@ public class EditorController {
         }
     }
 
-    public List<DiagramElement> getElements() {
+    public List<BaseElement> getElements() {
         return document.getElements();
     }
 
-    public List<DiagramElement> getElementsForRender() {
+    public List<BaseElement> getElementsForRender() {
         return document.getElementsForRender();
     }
 
@@ -166,7 +168,7 @@ public class EditorController {
             return null;
         }
 
-        Node element = labelService.getSingleSelectedNode();
+        BaseElement element = labelService.getSingleSelectedNode();
         if (element == null) {
             return null;
         }

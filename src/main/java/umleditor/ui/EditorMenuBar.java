@@ -68,7 +68,7 @@ public class EditorMenuBar extends JMenuBar implements DocumentObserver {
     private void refreshState() {
         boolean inSelectMode = controller.getCurrentToolMode() == ToolMode.SELECT;
         groupMenuItem.setEnabled(inSelectMode && controller.canGroupSelected());
-        ungroupMenuItem.setEnabled(inSelectMode && controller.canUngroupSelected());
+        ungroupMenuItem.setEnabled(inSelectMode);
         labelMenuItem.setEnabled(inSelectMode && controller.canEditLabelSelection());
     }
 

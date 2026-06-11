@@ -1,8 +1,10 @@
 package umleditor.application.service;
 
+import umleditor.domain.BaseElement;
 import umleditor.domain.DiagramDocument;
 import umleditor.domain.node.Node;
 
+import javax.lang.model.element.Element;
 import java.awt.Color;
 
 public class LabelService {
@@ -18,12 +20,12 @@ public class LabelService {
         return selectionQueryService.getSingleSelectedNode() != null;
     }
 
-    public Node getSingleSelectedNode() {
+    public BaseElement getSingleSelectedNode() {
         return selectionQueryService.getSingleSelectedNode();
     }
 
     public boolean updateSelectedLabel(String text, Color fillColor) {
-        Node node = selectionQueryService.getSingleSelectedNode();
+        BaseElement node = selectionQueryService.getSingleSelectedNode();
         if (node == null || text == null || fillColor == null) {
             return false;
         }
