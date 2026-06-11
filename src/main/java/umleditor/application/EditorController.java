@@ -56,6 +56,7 @@ public class EditorController {
         PointerTargetingService pointerTargetingService = new PointerTargetingService(document);
         ResizeService resizeService = new ResizeService();
         ElementTransformService elementTransformService = new TransformService(document);
+        SelectionQueryService selectionQueryService = new SelectionQueryService(document);
         return new ToolFactory(
                 document,
                 nodeFactory,
@@ -64,7 +65,8 @@ public class EditorController {
                 pointerTargetingService,
                 resizeService,
                 elementTransformService,
-                interactionStateService
+                interactionStateService,
+                selectionQueryService
         );
     }
 

@@ -27,11 +27,6 @@ public class PointerTargetingService {
         return hit == null ? null : hit.port();
     }
 
-    public boolean isLinkElement(BaseElement element) {
-        // 直接依賴 BaseElement 的多型判斷
-        return element != null && element.isLink();
-    }
-
     public PortHit findTopPortHitAt(Point p) {
         BaseElement topOwner = null;
         Port topPort = null;
@@ -77,7 +72,7 @@ public class PointerTargetingService {
         int topDepth = MAX_DEPTH + 1;
 
         for (BaseElement element : document.getElements()) {
-            if (!element.isNode()) {
+            if (element.getPorts().isEmpty()) {
                 continue;
             }
 

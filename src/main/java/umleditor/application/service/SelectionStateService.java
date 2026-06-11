@@ -46,7 +46,7 @@ public class SelectionStateService {
         List<BaseElement> elements = document.getElements();
 
         for (BaseElement element : elements) {
-            boolean selected = !element.isLink() && box.contains(element.getBounds());
+            boolean selected = box.contains(element.getBounds());
             element.setSelected(selected);
             if (selected) {
                 anySelected = true;

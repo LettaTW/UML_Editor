@@ -1,11 +1,6 @@
 package umleditor.application.factory;
 
-import umleditor.application.service.ElementTransformService;
-import umleditor.application.service.LinkCreationService;
-import umleditor.application.service.PointerTargetingService;
-import umleditor.application.service.ResizeService;
-import umleditor.application.service.SelectInteractionStateService;
-import umleditor.application.service.SelectionStateService;
+import umleditor.application.service.*;
 import umleditor.application.tools.*;
 import umleditor.domain.DiagramDocument;
 import umleditor.enumtype.ToolMode;
@@ -19,6 +14,7 @@ public class ToolFactory {
     private final ResizeService resizeService;
     private final ElementTransformService elementTransformService;
     private final SelectInteractionStateService interactionStateService;
+    private final SelectionQueryService selectionQueryService;
 
     public ToolFactory(
             DiagramDocument document,
@@ -28,7 +24,7 @@ public class ToolFactory {
             PointerTargetingService pointerTargetingService,
             ResizeService resizeService,
             ElementTransformService elementTransformService,
-            SelectInteractionStateService interactionStateService
+            SelectInteractionStateService interactionStateService, SelectionQueryService selectionQueryService
     ) {
         this.document = document;
         this.nodeFactory = nodeFactory;
@@ -38,6 +34,7 @@ public class ToolFactory {
         this.resizeService = resizeService;
         this.elementTransformService = elementTransformService;
         this.interactionStateService = interactionStateService;
+        this.selectionQueryService = selectionQueryService;
     }
 
     public Tool createTool(ToolMode mode) {
@@ -48,6 +45,7 @@ public class ToolFactory {
         return switch (mode) {
             case SELECT -> new SelectTool(
                     selectionStateService,
+                    selectionQueryService,
                     pointerTargetingService,
                     resizeService,
                     elementTransformService,

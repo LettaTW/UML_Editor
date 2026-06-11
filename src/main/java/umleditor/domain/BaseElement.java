@@ -52,17 +52,21 @@ public abstract class BaseElement implements DiagramElement {
         this.hovered = hovered;
     }
 
-    // Type Checking Methods (Default to false)
-    public boolean isNode() {
-        return false;
+    // Type Checking Methods (must delete)
+    public boolean isDraggable() {
+        return true;
     }
 
-    public boolean isLink() {
-        return false;
+    public boolean isGroupable() {
+        return true;
     }
 
     public boolean isComposite() {
         return false;
+    }
+
+    public int getRenderPriority() {
+        return 0;
     }
 
     // Structural Behaviors (Safe default implementations)

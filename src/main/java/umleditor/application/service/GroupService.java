@@ -4,6 +4,7 @@ import umleditor.domain.DiagramDocument;
 import umleditor.domain.BaseElement;
 import umleditor.domain.node.Composite;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static umleditor.config.EditorDefaults.MIN_DEPTH;
@@ -19,23 +20,31 @@ public class GroupService {
 
     public boolean canGroupSelected() {
         List<BaseElement> selected = selectionQueryService.getSelectedElements();
+
         return selected.size() >= 2;
     }
 
     public boolean groupSelected() {
-        if (!canGroupSelected()) {
+        List<BaseElement> selected = selectionQueryService.getSelectedElementsForRenderOrder();
+        List<BaseElement> elementsToGroup = new ArrayList<>();
+        for (BaseElement element : selected) {
+            if (element.isGroupable()) {
+                elementsToGroup.add(element);
+            }
+        }
+        if (elementsToGroup.size() < 2) {
             return false;
         }
 
-        List<BaseElement> groupable = selectionQueryService.getSelectedElementsForRenderOrder();
-        int compositeDepth = findBackDepth(groupable);
-        for (BaseElement element : groupable) {
+
+        int compositeDepth = findBackDepth(selected);
+        for (BaseElement element : selected) {
             document.removeElement(element);
             element.setSelected(false);
             element.setHovered(false);
         }
 
-        Composite composite = new Composite(groupable);
+        Composite composite = new Composite(selected);
         composite.setDepth(compositeDepth);
         document.addElementPreserveDepth(composite);
 
@@ -47,17 +56,21 @@ public class GroupService {
     }
 
     public boolean canUngroupSelected() {
-        return selectionQueryService.getSingleSelectedComposite() != null;
+        return selectionQueryService.getSingleSelectedNode() != null;
     }
 
     public boolean ungroupSelected() {
-        BaseElement element = selectionQueryService.getSingleSelectedComposite();
-        if (element == null) {
+        List<BaseElement> selected = selectionQueryService.getSelectedElements();
+        if (selected.size() != 1) {
             return false;
         }
+        BaseElement target = selected.get(0);
+        List<BaseElement> children = target.ungroup();
+        if (children.isEmpty()) {
+            return false;
+        }
+        document.removeElement(target);
 
-        document.removeElement(element);
-        List<BaseElement> children = element.ungroup();
         for (BaseElement child : children) {
             child.setSelected(false);
             child.setHovered(false);

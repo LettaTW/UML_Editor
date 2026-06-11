@@ -31,7 +31,6 @@ public abstract class Node extends BaseElement {
         updatePorts();
     }
 
-    public boolean isNode() { return true; }
 
     @Override
     public void moveBy(int dx, int dy) {

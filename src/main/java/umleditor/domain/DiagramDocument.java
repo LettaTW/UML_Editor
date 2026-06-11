@@ -66,20 +66,10 @@ public class DiagramDocument {
         // so external links do not visually pass through the active group.
         ordered.sort(
                 Comparator
-                        .comparingInt(this::renderPriority)
+                        .comparingInt(BaseElement::getRenderPriority)
                         .thenComparing(Comparator.comparingInt(BaseElement::getDepth).reversed())
         );
         return Collections.unmodifiableList(ordered);
-    }
-
-    private int renderPriority(BaseElement element) {
-        if (element.isComposite() && element.isSelected()) {
-            return 2;
-        }
-        if (element.isLink()) {
-            return 1;
-        }
-        return 0;
     }
 
     public void bringToFront(BaseElement target) {

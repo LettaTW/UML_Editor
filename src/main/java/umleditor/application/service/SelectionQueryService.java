@@ -45,14 +45,14 @@ public class SelectionQueryService {
         return element;
     }
 
-    public BaseElement getSingleSelectedComposite() {
-        List<BaseElement> selected = getSelectedElements();
-        if (selected.size() != 1) {
-            return null;
-        }
-
-        BaseElement element = selected.get(0);
-        return element;
-    }
+//    public BaseElement getSingleSelectedComposite() {
+//        List<BaseElement> selected = getSelectedElements();
+//        if (selected.size() != 1) {
+//            return null;
+//        }
+//
+//        BaseElement element = selected.get(0);
+//        return element;
+//    }
 }
 

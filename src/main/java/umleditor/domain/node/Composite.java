@@ -31,6 +31,11 @@ public class Composite extends BaseElement {
     }
 
     @Override
+    public int getRenderPriority() {
+        return isSelected() ? 1 : 0;
+    }
+
+    @Override
     public boolean isComposite() {
         return true;
     }
@@ -100,7 +105,12 @@ public class Composite extends BaseElement {
     public void draw(Graphics2D g2) {
         List<BaseElement> ordered = new ArrayList<>(children);
         // Draw from back to front based on normalized relative depth
-        ordered.sort(Comparator.comparingInt(this::relativeDepthOf).reversed());
+        ordered.sort(
+                Comparator
+                        .comparingInt(BaseElement::getRenderPriority)
+                        .thenComparing(Comparator.comparingInt(this::relativeDepthOf).reversed())
+        );
+
         for (BaseElement child : ordered) {
             child.draw(g2);
         }

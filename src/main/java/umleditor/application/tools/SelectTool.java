@@ -2,6 +2,7 @@ package umleditor.application.tools;
 
 import umleditor.domain.BaseElement;
 import umleditor.application.service.SelectionStateService;
+import umleditor.application.service.SelectionQueryService;
 import umleditor.application.service.PointerTargetingService;
 import umleditor.application.service.ResizeService;
 import umleditor.application.service.ElementTransformService;
@@ -9,6 +10,8 @@ import umleditor.application.service.SelectInteractionStateService;
 import umleditor.domain.model.Port;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static umleditor.config.EditorDefaults.DEFAULT_SELECTION_BOX_FILL_COLOR;
 import static umleditor.config.EditorDefaults.DEFAULT_SELECTION_BOX_STROKE_COLOR;
@@ -16,6 +19,7 @@ import static umleditor.config.EditorDefaults.MIN_NODE_SIZE;
 
 public class SelectTool implements Tool {
     private final SelectionStateService selectionStateService;
+    private final SelectionQueryService selectionQueryService;
     private final PointerTargetingService pointerTargetingService;
     private final ResizeService resizeService;
     private final ElementTransformService elementTransformService;
@@ -23,12 +27,14 @@ public class SelectTool implements Tool {
 
     public SelectTool(
             SelectionStateService selectionStateService,
+            SelectionQueryService selectionQueryService,
             PointerTargetingService pointerTargetingService,
             ResizeService resizeService,
             ElementTransformService elementTransformService,
             SelectInteractionStateService interactionStateService
     ) {
         this.selectionStateService = selectionStateService;
+        this.selectionQueryService = selectionQueryService;
         this.pointerTargetingService = pointerTargetingService;
         this.resizeService = resizeService;
         this.elementTransformService = elementTransformService;
@@ -37,6 +43,7 @@ public class SelectTool implements Tool {
 
     @Override
     public void mousePressed(Point p) {
+
         interactionStateService.beginPointerDown(p);
 
         PointerTargetingService.PortHit portHit = pointerTargetingService.findTopPortHitAt(p);
@@ -51,9 +58,25 @@ public class SelectTool implements Tool {
 
         BaseElement hit = pointerTargetingService.findTopElementAt(p);
         if (hit != null) {
-            selectionStateService.selectSingle(hit);
-            if (!pointerTargetingService.isLinkElement(hit)) {
-                interactionStateService.beginMove(hit, p);
+            // UX behavior: If clicking an unselected element, select it exclusively.
+            // If clicking an already selected element, keep the selection intact
+            // to allow dragging the entire selected group.
+            if (!hit.isSelected()) {
+                selectionStateService.selectSingle(hit);
+            }
+
+            List<BaseElement> selectedElements = selectionQueryService.getSelectedElements();
+            List<BaseElement> draggableElements = new ArrayList<>();
+
+            // Capability check: Only extract elements that allow dragging
+            for (BaseElement element : selectedElements) {
+                if (element.isDraggable()) {
+                    draggableElements.add(element);
+                }
+            }
+
+            if (!draggableElements.isEmpty()) {
+                interactionStateService.beginMove(draggableElements, p);
             }
             return;
         }
@@ -79,7 +102,9 @@ public class SelectTool implements Tool {
             Point lastDragPoint = interactionStateService.getLastDragPoint();
             int dx = p.x - lastDragPoint.x;
             int dy = p.y - lastDragPoint.y;
-            elementTransformService.applyMove(interactionStateService.getMovingElement(), dx, dy);
+
+            // Pass the list of moving elements instead of a single element
+            elementTransformService.applyMove(interactionStateService.getMovingElements(), dx, dy);
             interactionStateService.setLastDragPoint(p);
             return;
         }
@@ -153,7 +178,6 @@ public class SelectTool implements Tool {
         g2.setStroke(oldStroke);
     }
 
-
     private Rectangle buildNormalizedRect(Point a, Point b) {
         int x = Math.min(a.x, b.x);
         int y = Math.min(a.y, b.y);
@@ -162,4 +186,3 @@ public class SelectTool implements Tool {
         return new Rectangle(x, y, width, height);
     }
 }
-
