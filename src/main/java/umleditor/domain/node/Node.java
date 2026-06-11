@@ -1,12 +1,15 @@
 package umleditor.domain.node;
 
 import umleditor.config.EditorDefaults;
+import umleditor.domain.model.Label;
 import umleditor.domain.model.Port;
+import umleditor.domain.model.PortDirection;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Collections;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 
 public abstract class Node extends Block {
     // Define the Node's Bounds
@@ -14,15 +17,16 @@ public abstract class Node extends Block {
     protected int y;
     protected int width;
     protected int height;
-    private Color fillColor = Color.WHITE;
-    private String labelText = EditorDefaults.DEFAULT_LABEL_TEXT;
+    protected Label label;
 
-    protected final List<Port> ports = new ArrayList<>();
+    protected final Map<PortDirection, Port> ports = new EnumMap<>(PortDirection.class);
     protected Node(int x, int y, int width, int height) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
+        this.label = new Label(EditorDefaults.DEFAULT_LABEL_TEXT, Color.WHITE);
+        initPorts();
         updatePorts();
     }
 
@@ -51,11 +55,11 @@ public abstract class Node extends Block {
     }
 
     public List<Port> getPorts() {
-        return Collections.unmodifiableList(ports);
+        return List.copyOf(ports.values());
     }
 
     public Port findPortAt(Point p) {
-        for (Port port : ports) {
+        for (Port port : ports.values()) {
             if (port.contains(p)) {
                 return port;
             }
@@ -81,50 +85,34 @@ public abstract class Node extends Block {
     public int getWidth() { return width; }
     public int getHeight() { return height; }
 
-    public Color getFillColor() { return fillColor; }
+    public Color getFillColor() { return label.getFillColor(); }
 
-    public void setFillColor(Color fillColor) {
-        this.fillColor = fillColor;
-    }
+    public void setFillColor(Color fillColor) { this.label.setFillColor(fillColor); }
 
-    public String getLabelText() { return labelText; }
+    public String getLabelText() { return this.label.getText(); }
 
-    public void setLabelText(String labelText) {
-        this.labelText = labelText;
-    }
+    public void setLabelText(String labelText) { this.label.setText(labelText); }
+
+    // any draw logic
 
     protected void drawCenteredLabel(Graphics2D g2, Rectangle bounds) {
-        if (labelText == null || labelText.isEmpty()) {
-            return;
-        }
-
-        Font oldFont = g2.getFont();
-        g2.setFont(oldFont.deriveFont((float) EditorDefaults.DEFAULT_LABEL_FONT_SIZE));
-        FontMetrics fm = g2.getFontMetrics();
-
-        int textX = bounds.x + (bounds.width - fm.stringWidth(labelText)) / 2;
-        int textY = bounds.y + (bounds.height + fm.getAscent() - fm.getDescent()) / 2;
-
-        g2.setColor(Color.BLACK);
-        g2.drawString(labelText, textX, textY);
-        g2.setFont(oldFont);
+        label.drawCentered(g2, bounds);
     }
 
+    // draw poot for hover or selection state
     protected void drawPortsIfNeeded(Graphics2D g2) {
         if (!isSelected() && !isHovered()) {
             return;
         }
 
-        g2.setColor(isSelected()
-                ? EditorDefaults.NODE_SELECTED_PORT_COLOR
-                : EditorDefaults.NODE_HOVER_PORT_COLOR);
-        for (Port port : ports) {
-            Rectangle b = port.getBounds();
-            g2.fillRect(b.x, b.y, b.width, b.height);
+        Color portColor = isSelected() ? EditorDefaults.NODE_SELECTED_PORT_COLOR : EditorDefaults.NODE_HOVER_PORT_COLOR;
+        for (Port port : ports.values()) {
+            port.draw(g2, portColor);
         }
     }
 
-    protected void drawRectInteractionOutline(Graphics2D g2, Rectangle r) {
+    // draw outline for hover or selection state
+    protected void drawInteractionOutlineIfNeeded(Graphics2D g2, Rectangle r) {
         if (!isSelected() && !isHovered()) {
             return;
         }
@@ -133,25 +121,15 @@ public abstract class Node extends Block {
         g2.setColor(isSelected()
                 ? EditorDefaults.NODE_SELECTED_OUTLINE_COLOR
                 : EditorDefaults.NODE_HOVER_OUTLINE_COLOR);
-        g2.drawRect(r.x - 2, r.y - 2, r.width + 4, r.height + 4);
+        drawOutlineShape(g2, r);
         g2.setColor(oldColor);
     }
 
-    protected void drawOvalInteractionOutline(Graphics2D g2, Rectangle r) {
-        if (!isSelected() && !isHovered()) {
-            return;
-        }
-
-        Color oldColor = g2.getColor();
-        g2.setColor(isSelected()
-                ? EditorDefaults.NODE_SELECTED_OUTLINE_COLOR
-                : EditorDefaults.NODE_HOVER_OUTLINE_COLOR);
-        g2.drawOval(r.x - 2, r.y - 2, r.width + 4, r.height + 4);
-        g2.setColor(oldColor);
-    }
-
+    protected abstract void drawOutlineShape(Graphics2D g2, Rectangle r);
+    protected abstract void initPorts();
     public abstract void draw(Graphics2D g2);
 
+    // update port's position
     public abstract void updatePorts();
 
 }

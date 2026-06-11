@@ -1,7 +1,8 @@
-package umleditor.application.service;
+package umleditor.application;
 
 import umleditor.application.factory.LinkFactory;
 import umleditor.application.factory.NodeFactory;
+import umleditor.application.service.*;
 import umleditor.application.tools.Tool;
 import umleditor.application.factory.ToolFactory;
 import umleditor.application.tools.ToolManager;

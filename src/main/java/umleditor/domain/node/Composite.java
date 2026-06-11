@@ -35,10 +35,6 @@ public class Composite extends Block {
         return Collections.unmodifiableList(children);
     }
 
-    public List<DiagramElement> releaseChildren() {
-        return new ArrayList<>(children);
-    }
-
     public List<DiagramElement> releaseChildrenWithAbsoluteDepth(int compositeDepth) {
         List<Block> ordered = new ArrayList<>(children);
         ordered.sort(Comparator.comparingInt(this::relativeDepthOf));
