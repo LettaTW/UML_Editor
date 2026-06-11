@@ -1,6 +1,6 @@
 package umleditor;
 
-import umleditor.application.service.EditorController;
+import umleditor.application.EditorController;
 import umleditor.ui.MainFrame;
 
 import javax.swing.SwingUtilities;

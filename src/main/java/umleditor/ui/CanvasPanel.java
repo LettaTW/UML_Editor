@@ -1,6 +1,6 @@
 package umleditor.ui;
 
-import umleditor.application.service.EditorController;
+import umleditor.application.EditorController;
 import umleditor.domain.DocumentEvent;
 import umleditor.domain.DocumentObserver;
 
