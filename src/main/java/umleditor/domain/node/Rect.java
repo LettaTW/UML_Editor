@@ -20,13 +20,18 @@ public class Rect extends Node {
     }
 
     @Override
+    public void drawOutlineShape(Graphics2D g2, Rectangle r) {
+        g2.drawRect(r.x - 2, r.y - 2, r.width + 4, r.height + 4);
+    }
+
+    @Override
     public void draw(Graphics2D g2) {
         Rectangle r = getBounds();
         g2.setColor(getFillColor());
         g2.fillRect(r.x, r.y, r.width, r.height);
         g2.setColor(Color.BLACK);
         g2.drawRect(r.x, r.y, r.width, r.height);
-        drawRectInteractionOutline(g2, r);
+        drawInteractionOutlineIfNeeded(g2, r);
         drawCenteredLabel(g2, r);
         drawPortsIfNeeded(g2);
     }

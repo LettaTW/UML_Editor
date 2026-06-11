@@ -1,11 +1,13 @@
 package umleditor.domain.model;
 
+import umleditor.domain.capability.HitTestable;
+
 import static umleditor.config.EditorDefaults.PORT_SIZE;
 
 import java.awt.*;
 
 
-public class Port implements Handle{
+public class Port implements HitTestable {
     private final String ownerId;
     private int x;
     private int y;
@@ -39,5 +41,11 @@ public class Port implements Handle{
     @Override
     public boolean contains(Point p) {
         return getBounds().contains(p);
+    }
+
+    public void draw(Graphics2D g2, Color portColor) {
+        Rectangle b = getBounds();
+        g2.setColor(portColor);
+        g2.fillRect(b.x, b.y, b.width, b.height);
     }
 }

@@ -14,6 +14,8 @@ public class Oval extends Node {
         setLabelText(DEFAULT_OVAL_LABEL_TEXT);
     }
 
+
+
     @Override
     public boolean contains(Point p) {
         double rx = width / 2.0;
@@ -30,13 +32,18 @@ public class Oval extends Node {
     }
 
     @Override
+    public void drawOutlineShape(Graphics2D g2, Rectangle r) {
+        g2.drawOval(r.x - 2, r.y - 2, r.width + 4, r.height + 4);
+    }
+
+    @Override
     public void draw(Graphics2D g2) {
         Rectangle r = getBounds();
         g2.setColor(getFillColor());
         g2.fillOval(r.x, r.y, r.width, r.height);
         g2.setColor(Color.BLACK);
         g2.drawOval(r.x, r.y, r.width, r.height);
-        drawOvalInteractionOutline(g2, r);
+        drawInteractionOutlineIfNeeded(g2, r);
         drawCenteredLabel(g2, r);
         drawPortsIfNeeded(g2);
     }
