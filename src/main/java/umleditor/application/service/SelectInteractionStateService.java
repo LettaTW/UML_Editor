@@ -1,6 +1,6 @@
 package umleditor.application.service;
 
-import umleditor.domain.DiagramElement;
+import umleditor.domain.BaseElement;
 
 import java.awt.Point;
 
@@ -9,8 +9,8 @@ public class SelectInteractionStateService {
     private Point dragCurrent;
     private Point lastDragPoint;
     private ResizeService.ResizeSession resizeSession;
-    private DiagramElement movingElement;
-    private DiagramElement resizingElement;
+    private BaseElement movingElement;
+    private BaseElement resizingElement;
     private boolean marqueeActive;
     private boolean marqueeClearedSelection;
 
@@ -25,7 +25,7 @@ public class SelectInteractionStateService {
         marqueeClearedSelection = false;
     }
 
-    public void beginResize(DiagramElement owner, ResizeService.ResizeSession session) {
+    public void beginResize(BaseElement owner, ResizeService.ResizeSession session) {
         resizingElement = owner;
         resizeSession = session;
         movingElement = null;
@@ -34,7 +34,7 @@ public class SelectInteractionStateService {
         marqueeClearedSelection = false;
     }
 
-    public void beginMove(DiagramElement target, Point startPoint) {
+    public void beginMove(BaseElement target, Point startPoint) {
         movingElement = target;
         lastDragPoint = startPoint;
         resizingElement = null;
@@ -64,7 +64,7 @@ public class SelectInteractionStateService {
         return marqueeActive;
     }
 
-    public DiagramElement getResizingElement() {
+    public BaseElement getResizingElement() {
         return resizingElement;
     }
 
@@ -72,7 +72,7 @@ public class SelectInteractionStateService {
         return resizeSession;
     }
 
-    public DiagramElement getMovingElement() {
+    public BaseElement getMovingElement() {
         return movingElement;
     }
 

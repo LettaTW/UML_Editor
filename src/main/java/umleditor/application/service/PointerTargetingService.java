@@ -1,7 +1,7 @@
 package umleditor.application.service;
 
 import umleditor.domain.DiagramDocument;
-import umleditor.domain.DiagramElement;
+import umleditor.domain.BaseElement;
 import umleditor.domain.link.Link;
 import umleditor.domain.model.Port;
 import umleditor.domain.node.Block;
@@ -12,7 +12,7 @@ import java.awt.*;
 import static umleditor.config.EditorDefaults.MAX_DEPTH;
 
 public class PointerTargetingService {
-    public record PortHit(DiagramElement owner, Port port) {
+    public record PortHit(BaseElement owner, Port port) {
     }
 
     private final DiagramDocument document;
@@ -21,7 +21,7 @@ public class PointerTargetingService {
         this.document = document;
     }
 
-    public DiagramElement findTopElementAt(Point p) {
+    public BaseElement findTopElementAt(Point p) {
         return document.findTopElementAt(p);
     }
 
@@ -30,16 +30,16 @@ public class PointerTargetingService {
         return hit == null ? null : hit.port();
     }
 
-    public boolean isNodeElement(DiagramElement element) {
+    public boolean isNodeElement(BaseElement element) {
         return document.isNodeElement(element);
     }
 
-    public boolean isLinkElement(DiagramElement element) {
+    public boolean isLinkElement(BaseElement element) {
         return document.isLinkElement(element);
     }
 
     public PortHit findTopPortHitAt(Point p) {
-        DiagramElement topOwner = null;
+        BaseElement topOwner = null;
         Port topPort = null;
         int topDepth = MAX_DEPTH + 1;
 
@@ -81,8 +81,8 @@ public class PointerTargetingService {
         applyHoverState(null);
     }
 
-    private DiagramElement findTopNodeNear(Point p, int proximityPx) {
-        DiagramElement topNode = null;
+    private BaseElement findTopNodeNear(Point p, int proximityPx) {
+        BaseElement topNode = null;
         int topDepth = MAX_DEPTH + 1;
 
         for (Block block : document.getBlocks()) {
@@ -107,7 +107,7 @@ public class PointerTargetingService {
         return topNode;
     }
 
-    private void applyHoverState(DiagramElement hoverTarget) {
+    private void applyHoverState(BaseElement hoverTarget) {
         for (Block block : document.getBlocks()) {
             block.setHovered(block == hoverTarget);
         }

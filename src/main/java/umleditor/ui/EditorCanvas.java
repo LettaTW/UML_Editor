@@ -1,7 +1,7 @@
 package umleditor.ui;
 
 import umleditor.application.EditorController;
-import umleditor.domain.DiagramElement;
+import umleditor.domain.BaseElement;
 
 import javax.swing.*;
 import java.awt.*;
@@ -53,7 +53,7 @@ public class EditorCanvas extends JPanel {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        for (DiagramElement element : controller.getElementsForRender()) {
+        for (BaseElement element : controller.getElementsForRender()) {
             element.draw(g2);
         }
         controller.drawToolOverlay(g2);

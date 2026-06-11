@@ -1,10 +1,10 @@
 package umleditor.domain.node;
 
 import umleditor.config.EditorDefaults;
-import umleditor.domain.DiagramElement;
+import umleditor.domain.BaseElement;
+import umleditor.domain.BaseElement;
 
 import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -22,9 +22,9 @@ public class Composite extends Block {
     private final List<Block> children = new ArrayList<>();
     private final Map<String, Integer> relativeDepthById = new HashMap<>();
 
-    public Composite(List<DiagramElement> elements) {
+    public Composite(List<BaseElement> elements) {
         if (elements != null) {
-            for (DiagramElement element : elements) {
+            for (BaseElement element : elements) {
                 addElementToChildren(element);
             }
         }
@@ -35,11 +35,11 @@ public class Composite extends Block {
         return Collections.unmodifiableList(children);
     }
 
-    public List<DiagramElement> releaseChildrenWithAbsoluteDepth(int compositeDepth) {
+    public List<BaseElement> releaseChildrenWithAbsoluteDepth(int compositeDepth) {
         List<Block> ordered = new ArrayList<>(children);
         ordered.sort(Comparator.comparingInt(this::relativeDepthOf));
 
-        List<DiagramElement> released = new ArrayList<>(ordered.size());
+        List<BaseElement> released = new ArrayList<>(ordered.size());
         for (Block child : ordered) {
             int absoluteDepth = clampDepth(compositeDepth + relativeDepthOf(child));
             child.setDepth(absoluteDepth);
@@ -118,7 +118,7 @@ public class Composite extends Block {
         g2.setStroke(oldStroke);
     }
 
-    private void addElementToChildren(DiagramElement element) {
+    private void addElementToChildren(BaseElement element) {
         if (!(element instanceof Block block)) {
             return;
         }

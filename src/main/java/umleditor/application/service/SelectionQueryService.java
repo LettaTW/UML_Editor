@@ -1,7 +1,7 @@
 package umleditor.application.service;
 
 import umleditor.domain.DiagramDocument;
-import umleditor.domain.DiagramElement;
+import umleditor.domain.BaseElement;
 import umleditor.domain.node.Composite;
 import umleditor.domain.node.Node;
 
@@ -15,9 +15,9 @@ public class SelectionQueryService {
         this.document = document;
     }
 
-    public List<DiagramElement> getSelectedElements() {
-        List<DiagramElement> selected = new ArrayList<>();
-        for (DiagramElement element : document.getElements()) {
+    public List<BaseElement> getSelectedElements() {
+        List<BaseElement> selected = new ArrayList<>();
+        for (BaseElement element : document.getElements()) {
             if (element.isSelected()) {
                 selected.add(element);
             }
@@ -25,9 +25,9 @@ public class SelectionQueryService {
         return selected;
     }
 
-    public List<DiagramElement> getSelectedElementsForRenderOrder() {
-        List<DiagramElement> selected = new ArrayList<>();
-        for (DiagramElement element : document.getElementsForRender()) {
+    public List<BaseElement> getSelectedElementsForRenderOrder() {
+        List<BaseElement> selected = new ArrayList<>();
+        for (BaseElement element : document.getElementsForRender()) {
             if (element.isSelected()) {
                 selected.add(element);
             }
@@ -36,22 +36,22 @@ public class SelectionQueryService {
     }
 
     public Node getSingleSelectedNode() {
-        List<DiagramElement> selected = getSelectedElements();
+        List<BaseElement> selected = getSelectedElements();
         if (selected.size() != 1) {
             return null;
         }
 
-        DiagramElement element = selected.get(0);
+        BaseElement element = selected.get(0);
         return document.asNode(element);
     }
 
     public Composite getSingleSelectedComposite() {
-        List<DiagramElement> selected = getSelectedElements();
+        List<BaseElement> selected = getSelectedElements();
         if (selected.size() != 1) {
             return null;
         }
 
-        DiagramElement element = selected.get(0);
+        BaseElement element = selected.get(0);
         return document.asComposite(element);
     }
 }

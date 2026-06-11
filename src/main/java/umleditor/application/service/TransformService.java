@@ -1,7 +1,7 @@
 package umleditor.application.service;
 
 import umleditor.domain.DiagramDocument;
-import umleditor.domain.DiagramElement;
+import umleditor.domain.BaseElement;
 import umleditor.domain.link.Link;
 import umleditor.domain.model.Port;
 import umleditor.domain.node.Block;
@@ -19,7 +19,7 @@ public class TransformService implements ElementTransformService {
     }
 
     @Override
-    public void applyMove(DiagramElement element, int dx, int dy) {
+    public void applyMove(BaseElement element, int dx, int dy) {
         if (element == null || (dx == 0 && dy == 0)) {
             return;
         }
@@ -33,7 +33,7 @@ public class TransformService implements ElementTransformService {
     }
 
     @Override
-    public void applyResize(DiagramElement element, Rectangle bounds) {
+    public void applyResize(BaseElement element, Rectangle bounds) {
         if (element == null || bounds == null) {
             return;
         }
@@ -59,7 +59,7 @@ public class TransformService implements ElementTransformService {
         }
     }
 
-    private List<String> collectMovedNodeIds(DiagramElement element) {
+    private List<String> collectMovedNodeIds(BaseElement element) {
         Block block = model.asBlock(element);
         if (block != null) {
             return block.collectOwnedNodeIds();

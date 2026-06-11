@@ -1,6 +1,6 @@
 package umleditor.application.tools;
 
-import umleditor.domain.DiagramElement;
+import umleditor.domain.BaseElement;
 import umleditor.application.service.SelectionStateService;
 import umleditor.application.service.PointerTargetingService;
 import umleditor.application.service.ResizeService;
@@ -41,7 +41,7 @@ public class SelectTool implements Tool {
 
         PointerTargetingService.PortHit portHit = pointerTargetingService.findTopPortHitAt(p);
         if (portHit != null) {
-            DiagramElement owner = portHit.owner();
+            BaseElement owner = portHit.owner();
             Port pressedPort = portHit.port();
             selectionStateService.selectSingle(owner);
 
@@ -51,7 +51,7 @@ public class SelectTool implements Tool {
             return;
         }
 
-        DiagramElement hit = pointerTargetingService.findTopElementAt(p);
+        BaseElement hit = pointerTargetingService.findTopElementAt(p);
         if (hit != null) {
             selectionStateService.selectSingle(hit);
             if (!pointerTargetingService.isLinkElement(hit)) {

@@ -1,12 +1,12 @@
 package umleditor.application.service;
 
-import umleditor.domain.DiagramElement;
+import umleditor.domain.BaseElement;
 
 import java.awt.*;
 
 public interface ElementTransformService {
-    void applyMove(DiagramElement element, int dx, int dy);
+    void applyMove(BaseElement element, int dx, int dy);
 
-    void applyResize(DiagramElement element, Rectangle bounds);
+    void applyResize(BaseElement element, Rectangle bounds);
 }
 

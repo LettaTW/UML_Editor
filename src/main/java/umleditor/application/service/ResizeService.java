@@ -1,6 +1,6 @@
 package umleditor.application.service;
 
-import umleditor.domain.DiagramElement;
+import umleditor.domain.BaseElement;
 import umleditor.domain.model.Port;
 
 import java.awt.*;
@@ -15,7 +15,7 @@ public class ResizeService {
     public record ResizeSession(Point anchor, ResizeMode mode) {
     }
 
-    public ResizeSession beginSession(DiagramElement owner, Port pressedPort) {
+    public ResizeSession beginSession(BaseElement owner, Port pressedPort) {
         Rectangle bounds = owner.getBounds();
         int left = bounds.x;
         int right = bounds.x + bounds.width;
@@ -53,7 +53,7 @@ public class ResizeService {
     }
 
     public Rectangle computeResizedBounds(
-            DiagramElement owner,
+            BaseElement owner,
             ResizeSession session,
             Point current,
             int minNodeSize

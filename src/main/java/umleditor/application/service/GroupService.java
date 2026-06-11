@@ -1,7 +1,7 @@
 package umleditor.application.service;
 
 import umleditor.domain.DiagramDocument;
-import umleditor.domain.DiagramElement;
+import umleditor.domain.BaseElement;
 import umleditor.domain.node.Composite;
 
 import java.util.List;
@@ -18,12 +18,12 @@ public class GroupService {
     }
 
     public boolean canGroupSelected() {
-        List<DiagramElement> selected = selectionQueryService.getSelectedElements();
+        List<BaseElement> selected = selectionQueryService.getSelectedElements();
         if (selected.size() < 2) {
             return false;
         }
 
-        for (DiagramElement element : selected) {
+        for (BaseElement element : selected) {
             if (!document.isBlockElement(element)) {
                 return false;
             }
@@ -37,9 +37,9 @@ public class GroupService {
             return false;
         }
 
-        List<DiagramElement> groupable = selectionQueryService.getSelectedElementsForRenderOrder();
+        List<BaseElement> groupable = selectionQueryService.getSelectedElementsForRenderOrder();
         int compositeDepth = findBackDepth(groupable);
-        for (DiagramElement element : groupable) {
+        for (BaseElement element : groupable) {
             document.removeElement(element);
             element.setSelected(false);
             element.setHovered(false);
@@ -49,7 +49,7 @@ public class GroupService {
         composite.setDepth(compositeDepth);
         document.addElementPreserveDepth(composite);
 
-        for (DiagramElement element : document.getElements()) {
+        for (BaseElement element : document.getElements()) {
             element.setSelected(element == composite);
         }
         document.notifySelectionChanged();
@@ -67,8 +67,8 @@ public class GroupService {
         }
 
         document.removeElement(composite);
-        List<DiagramElement> children = composite.releaseChildrenWithAbsoluteDepth(composite.getDepth());
-        for (DiagramElement child : children) {
+        List<BaseElement> children = composite.releaseChildrenWithAbsoluteDepth(composite.getDepth());
+        for (BaseElement child : children) {
             child.setSelected(false);
             child.setHovered(false);
             document.addElementPreserveDepth(child);
@@ -77,9 +77,9 @@ public class GroupService {
         return true;
     }
 
-    private int findBackDepth(List<DiagramElement> elements) {
+    private int findBackDepth(List<BaseElement> elements) {
         int maxDepth = Integer.MIN_VALUE;
-        for (DiagramElement element : elements) {
+        for (BaseElement element : elements) {
             maxDepth = Math.max(maxDepth, element.getDepth());
         }
         return maxDepth == Integer.MIN_VALUE ? MIN_DEPTH : maxDepth;
