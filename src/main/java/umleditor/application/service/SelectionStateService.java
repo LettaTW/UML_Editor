@@ -24,7 +24,7 @@ public class SelectionStateService {
             element.setSelected(element == target);
         }
 
-        if (document.isCompositeElement(target)) {
+        if (target.isComposite()) {
             // Composite should be raised on every click, while keeping grouped internals isolated.
             document.bringToFrontIsolated(target);
         } else if (!alreadySelected) {
@@ -46,7 +46,7 @@ public class SelectionStateService {
         List<BaseElement> elements = document.getElements();
 
         for (BaseElement element : elements) {
-            boolean selected = !document.isLinkElement(element) && box.contains(element.getBounds());
+            boolean selected = !element.isLink() && box.contains(element.getBounds());
             element.setSelected(selected);
             if (selected) {
                 anySelected = true;

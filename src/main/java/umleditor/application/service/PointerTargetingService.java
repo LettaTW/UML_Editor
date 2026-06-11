@@ -2,10 +2,7 @@ package umleditor.application.service;
 
 import umleditor.domain.DiagramDocument;
 import umleditor.domain.BaseElement;
-import umleditor.domain.link.Link;
 import umleditor.domain.model.Port;
-import umleditor.domain.node.Block;
-import umleditor.domain.node.Node;
 
 import java.awt.*;
 
@@ -30,12 +27,9 @@ public class PointerTargetingService {
         return hit == null ? null : hit.port();
     }
 
-    public boolean isNodeElement(BaseElement element) {
-        return document.isNodeElement(element);
-    }
-
     public boolean isLinkElement(BaseElement element) {
-        return document.isLinkElement(element);
+        // 直接依賴 BaseElement 的多型判斷
+        return element != null && element.isLink();
     }
 
     public PortHit findTopPortHitAt(Point p) {
@@ -43,20 +37,17 @@ public class PointerTargetingService {
         Port topPort = null;
         int topDepth = MAX_DEPTH + 1;
 
-        for (Block block : document.getBlocks()) {
-            Node node = document.asNode(block);
-            if (node == null) {
-                continue;
-            }
 
-            Port candidate = node.findPortAt(p);
+        for (BaseElement element : document.getElements()) {
+            // findPortAt(p) if is not Node (like Link, Composite) default return null
+            Port candidate = element.findPortAt(p);
             if (candidate == null) {
                 continue;
             }
 
-            int depth = node.getDepth();
+            int depth = element.getDepth();
             if (topPort == null || depth <= topDepth) {
-                topOwner = node;
+                topOwner = element;
                 topPort = candidate;
                 topDepth = depth;
             }
@@ -85,21 +76,20 @@ public class PointerTargetingService {
         BaseElement topNode = null;
         int topDepth = MAX_DEPTH + 1;
 
-        for (Block block : document.getBlocks()) {
-            Node node = document.asNode(block);
-            if (node == null) {
+        for (BaseElement element : document.getElements()) {
+            if (!element.isNode()) {
                 continue;
             }
 
-            Rectangle nearArea = node.getBounds();
+            Rectangle nearArea = element.getBounds();
             nearArea.grow(proximityPx, proximityPx);
             if (!nearArea.contains(p)) {
                 continue;
             }
 
-            int depth = node.getDepth();
+            int depth = element.getDepth();
             if (topNode == null || depth <= topDepth) {
-                topNode = node;
+                topNode = element;
                 topDepth = depth;
             }
         }
@@ -108,15 +98,11 @@ public class PointerTargetingService {
     }
 
     private void applyHoverState(BaseElement hoverTarget) {
-        for (Block block : document.getBlocks()) {
-            block.setHovered(block == hoverTarget);
-        }
 
-        for (Link link : document.getLinks()) {
-            link.setHovered(link == hoverTarget);
+        for (BaseElement element : document.getElements()) {
+            element.setHovered(element == hoverTarget);
         }
 
         document.notifyHoverChanged();
     }
 }
-

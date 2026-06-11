@@ -45,9 +45,7 @@ public class SelectTool implements Tool {
             Port pressedPort = portHit.port();
             selectionStateService.selectSingle(owner);
 
-            if (pointerTargetingService.isNodeElement(owner)) {
-                interactionStateService.beginResize(owner, resizeService.beginSession(owner, pressedPort));
-            }
+            interactionStateService.beginResize(owner, resizeService.beginSession(owner, pressedPort));
             return;
         }
 

@@ -28,6 +28,8 @@ public abstract class Link extends BaseElement implements NodeTransformReactable
         return targetOwnerId;
     }
 
+    public boolean isLink() { return true; }
+
     @Override
     public void onNodeMoved(String nodeId, int dx, int dy) {
         if (sourceOwnerId.equals(nodeId)) {

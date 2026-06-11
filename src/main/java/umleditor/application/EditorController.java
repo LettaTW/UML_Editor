@@ -166,7 +166,7 @@ public class EditorController {
             return null;
         }
 
-        Node element = labelService.getSingleSelectedNode();
+        BaseElement element = labelService.getSingleSelectedNode();
         if (element == null) {
             return null;
         }

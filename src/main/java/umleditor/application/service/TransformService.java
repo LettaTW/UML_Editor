@@ -2,13 +2,9 @@ package umleditor.application.service;
 
 import umleditor.domain.DiagramDocument;
 import umleditor.domain.BaseElement;
-import umleditor.domain.link.Link;
 import umleditor.domain.model.Port;
-import umleditor.domain.node.Block;
-import umleditor.domain.node.Node;
 
-import java.awt.*;
-import java.util.Collections;
+import java.awt.Rectangle;
 import java.util.List;
 
 public class TransformService implements ElementTransformService {
@@ -27,7 +23,8 @@ public class TransformService implements ElementTransformService {
         element.moveBy(dx, dy);
         model.notifyElementUpdated(element);
 
-        for (String movedNodeId : collectMovedNodeIds(element)) {
+        // notify Link Node Moved
+        for (String movedNodeId : element.collectOwnedNodeIds()) {
             notifyLinkNodeMoved(movedNodeId, dx, dy);
         }
     }
@@ -38,35 +35,19 @@ public class TransformService implements ElementTransformService {
             return;
         }
 
-        Node node = model.asNode(element);
-        if (node == null) {
-            return;
-        }
-
-        node.resizeTo(bounds);
-        model.notifyElementUpdated(node);
+        element.resizeTo(bounds);
+        model.notifyElementUpdated(element);
 
         String reshapedNodeId = element.getID();
-        List<Port> ports = node.getPorts();
-        for (Link link : model.getLinks()) {
-            link.onNodeReshaped(reshapedNodeId, ports);
+        List<Port> ports = element.getPorts();
+        for (BaseElement e : model.getElements()) {
+            e.onNodeReshaped(reshapedNodeId, ports);
         }
     }
 
     private void notifyLinkNodeMoved(String movedNodeId, int dx, int dy) {
-        for (Link link : model.getLinks()) {
-            link.onNodeMoved(movedNodeId, dx, dy);
+        for (BaseElement e : model.getElements()) {
+            e.onNodeMoved(movedNodeId, dx, dy);
         }
-    }
-
-    private List<String> collectMovedNodeIds(BaseElement element) {
-        Block block = model.asBlock(element);
-        if (block != null) {
-            return block.collectOwnedNodeIds();
-        }
-
-        return Collections.emptyList();
     }
 }
-
-

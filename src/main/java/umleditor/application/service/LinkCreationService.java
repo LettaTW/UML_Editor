@@ -29,7 +29,7 @@ public class LinkCreationService {
             return;
         }
 
-        document.addLink(link);
+        document.addElement(link);
     }
 }
 

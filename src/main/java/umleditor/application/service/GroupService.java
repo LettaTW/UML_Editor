@@ -19,17 +19,7 @@ public class GroupService {
 
     public boolean canGroupSelected() {
         List<BaseElement> selected = selectionQueryService.getSelectedElements();
-        if (selected.size() < 2) {
-            return false;
-        }
-
-        for (BaseElement element : selected) {
-            if (!document.isBlockElement(element)) {
-                return false;
-            }
-        }
-
-        return true;
+        return selected.size() >= 2;
     }
 
     public boolean groupSelected() {
@@ -61,13 +51,13 @@ public class GroupService {
     }
 
     public boolean ungroupSelected() {
-        Composite composite = selectionQueryService.getSingleSelectedComposite();
-        if (composite == null) {
+        BaseElement element = selectionQueryService.getSingleSelectedComposite();
+        if (element == null) {
             return false;
         }
 
-        document.removeElement(composite);
-        List<BaseElement> children = composite.releaseChildrenWithAbsoluteDepth(composite.getDepth());
+        document.removeElement(element);
+        List<BaseElement> children = element.ungroup();
         for (BaseElement child : children) {
             child.setSelected(false);
             child.setHovered(false);

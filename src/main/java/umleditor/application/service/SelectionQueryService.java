@@ -35,24 +35,24 @@ public class SelectionQueryService {
         return selected;
     }
 
-    public Node getSingleSelectedNode() {
+    public BaseElement getSingleSelectedNode() {
         List<BaseElement> selected = getSelectedElements();
         if (selected.size() != 1) {
             return null;
         }
 
         BaseElement element = selected.get(0);
-        return document.asNode(element);
+        return element;
     }
 
-    public Composite getSingleSelectedComposite() {
+    public BaseElement getSingleSelectedComposite() {
         List<BaseElement> selected = getSelectedElements();
         if (selected.size() != 1) {
             return null;
         }
 
         BaseElement element = selected.get(0);
-        return document.asComposite(element);
+        return element;
     }
 }
 
