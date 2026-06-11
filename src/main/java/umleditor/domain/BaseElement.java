@@ -108,12 +108,4 @@ public abstract class BaseElement implements DiagramElement {
         // Empty implementation
     }
 
-    public void onNodeMoved(String nodeId, int dx, int dy) {
-        // Empty implementation
-    }
-
-    public void onNodeReshaped(String nodeId, List<Port> ports) {
-        // Empty implementation
-    }
-
 }

@@ -6,112 +6,65 @@ import umleditor.domain.model.Port;
 
 import java.awt.*;
 import java.awt.geom.Line2D;
-import java.util.List;
 
-public abstract class Link extends BaseElement implements NodeTransformReactable {
-    private final String sourceOwnerId;
-    private final String targetOwnerId;
-    protected Point sourcePoint;
-    protected Point targetPoint;
+public abstract class Link extends BaseElement {
+    protected Port sourcePort;
+    protected Port targetPort;
 
     protected Link(Port sourcePort, Port targetPort) {
-        this.sourceOwnerId = sourcePort.getOwnerId();
-        this.targetOwnerId = targetPort.getOwnerId();
-        this.sourcePoint = new Point(sourcePort.getX(), sourcePort.getY());
-        this.targetPoint = new Point(targetPort.getX(), targetPort.getY());
+        this.sourcePort = sourcePort;
+        this.targetPort = targetPort;
     }
 
-    public String getSourceOwnerId() {
-        return sourceOwnerId;
+    public Port getSourcePort() {
+        return sourcePort;
     }
-    public String getTargetOwnerId() {
-        return targetOwnerId;
+
+    public Port getTargetPort() {
+        return targetPort;
     }
 
     @Override
     public int getRenderPriority() {
         return 2;
     }
+
     @Override
-    public boolean isDraggable() { return false; }
+    public boolean isDraggable() {
+        return false;
+    }
 
     @Override
     public boolean isGroupable() {
         return false;
     }
 
-
-    @Override
-    public void onNodeMoved(String nodeId, int dx, int dy) {
-        if (sourceOwnerId.equals(nodeId)) {
-            sourcePoint.translate(dx, dy);
-        }
-        if (targetOwnerId.equals(nodeId)) {
-            targetPoint.translate(dx, dy);
-        }
-    }
-
-    @Override
-    public void onNodeReshaped(String nodeId, List<Port> ports) {
-        if (ports == null || ports.isEmpty()) {
-            return;
-        }
-
-        if (sourceOwnerId.equals(nodeId)) {
-            sourcePoint = nearestPortPoint(ports, sourcePoint);
-        }
-        if (targetOwnerId.equals(nodeId)) {
-            targetPoint = nearestPortPoint(ports, targetPoint);
-        }
-    }
-
     @Override
     public void moveBy(int dx, int dy) {
-        sourcePoint.translate(dx, dy);
-        targetPoint.translate(dx, dy);
+        // Link position is determined by Ports.
+        // When Node moves, Port updates automatically. No implementation needed here.
     }
 
     @Override
     public Rectangle getBounds() {
-        int x = Math.min(sourcePoint.x, targetPoint.x);
-        int y = Math.min(sourcePoint.y, targetPoint.y);
-        int width = Math.abs(sourcePoint.x - targetPoint.x);
-        int height = Math.abs(sourcePoint.y - targetPoint.y);
+        int x = Math.min(sourcePort.getX(), targetPort.getX());
+        int y = Math.min(sourcePort.getY(), targetPort.getY());
+        int width = Math.abs(sourcePort.getX() - targetPort.getX());
+        int height = Math.abs(sourcePort.getY() - targetPort.getY());
         return new Rectangle(x, y, width, height);
     }
 
     @Override
     public boolean contains(Point p) {
-        return Line2D.ptSegDist(sourcePoint.x, sourcePoint.y, targetPoint.x, targetPoint.y, p.x, p.y) <= 5.0;
+        return Line2D.ptSegDist(sourcePort.getX(), sourcePort.getY(), targetPort.getX(), targetPort.getY(), p.x, p.y) <= 5.0;
     }
 
     protected void drawBaseLine(Graphics2D g2) {
         g2.setColor(Color.BLACK);
-        g2.drawLine(sourcePoint.x, sourcePoint.y, targetPoint.x, targetPoint.y);
+        g2.drawLine(sourcePort.getX(), sourcePort.getY(), targetPort.getX(), targetPort.getY());
     }
 
     protected double getLineAngle() {
-        return Math.atan2(targetPoint.y - sourcePoint.y, targetPoint.x - sourcePoint.x);
-    }
-
-    private Point nearestPortPoint(List<Port> ports, Point reference) {
-        Port nearest = null;
-        double minDistance = Double.MAX_VALUE;
-
-        for (Port port : ports) {
-            double dx = port.getX() - reference.x;
-            double dy = port.getY() - reference.y;
-            double distance = (dx * dx) + (dy * dy);
-            if (nearest == null || distance < minDistance) {
-                nearest = port;
-                minDistance = distance;
-            }
-        }
-
-        if (nearest == null) {
-            return new Point(reference);
-        }
-        return new Point(nearest.getX(), nearest.getY());
+        return Math.atan2(targetPort.getY() - sourcePort.getY(), targetPort.getX() - sourcePort.getX());
     }
 }
-
